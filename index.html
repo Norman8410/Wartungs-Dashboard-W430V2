@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch System v23.01</title>
+    <title>Agie Wartung - Bosch Dashboard v5</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -10,40 +10,47 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         :root { --bosch-red: #d50000; --bosch-blue: #003a6c; --bosch-light-blue: #00b5e2; --bosch-green: #008a4f; --bosch-gray: #eff1f2; }
-        .top-bar { height: 8px; width: 100%; back<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch Fixed</title>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <style>
-        :root { --bosch-red: #d50000; --bosch-blue: #003a6c; --bosch-light-blue: #00b5e2; --bosch-green: #008a4f; --bosch-gray: #eff1f2; }
-        .top-bar { height: 8px; width: 100%; background: linear-gradient(90deg, var(--bosch-red) 25%, var(--bosch-blue) 25%, var(--bosch-blue) 50%, var(--bosch-light-blue) 50%, var(--bosch-light-blue) 75%, var(--bosch-green) 75%); position: fixed; top: 0; left: 0; z-index: 3000; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bosch-gray); margin: 0; padding: 20px; padding-top: 50px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Vollbild-Skalierung */
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bosch-gray); margin: 0; padding: 0; overflow-x: hidden; }
+        .top-bar { height: 8px; width: 100%; background: linear-gradient(90deg, var(--bosch-red) 25%, var(--bosch-blue) 25%, var(--bosch-blue) 50%, var(--bosch-light-blue) 50%, var(--bosch-light-blue) 75%, var(--bosch-green) 75%); position: fixed; top: 0; z-index: 3000; }
+        
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bosch-gray); z-index: 2000; display: flex; justify-content: center; align-items: center; }
-        .auth-box { background: white; padding: 40px; border-top: 6px solid var(--bosch-red); width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .auth-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #bfc0c2; box-sizing: border-box; }
-        .header { width: 98%; max-width: 1600px; background: white; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .bosch-brand { color: var(--bosch-red); font-weight: 900; font-size: 24px; }
+        .auth-box { background: white; padding: 40px; border-top: 6px solid var(--bosch-red); width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .auth-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #bfc0c2; }
+
+        .header { background: white; padding: 15px 30px; margin-top: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .bosch-brand { color: var(--bosch-red); font-weight: 900; font-size: 26px; }
         .bosch-brand span { color: var(--bosch-blue); }
-        .action-bar { width: 98%; max-width: 1600px; display: flex; gap: 10px; margin-bottom: 15px; }
-        .nav-btn { padding: 12px 20px; cursor: pointer; border: 1px solid #bfc0c2; background: white; font-weight: bold; color: var(--bosch-blue); }
-        .main-layout { display: none; width: 98%; max-width: 1600px; gap: 20px; }
-        .content-area { flex: 3; display: flex; flex-direction: column; gap: 20px; }
-        .chart-container { background: white; padding: 20px; border-top: 4px solid var(--bosch-blue); min-height: 400px; }
-        .sidebar { flex: 1.5; background: white; padding: 15px; border-top: 4px solid var(--bosch-light-blue); height: 80vh; overflow-y: auto; }
-        .control-row { display: flex; align-items: center; padding: 10px; margin-bottom: 8px; border: 1px solid #dee2e6; border-left: 6px solid #ccc; gap: 8px; }
+
+        .action-bar { padding: 10px 30px; display: flex; gap: 15px; align-items: center; }
+        .nav-btn { padding: 10px 20px; cursor: pointer; border: 1px solid #bfc0c2; background: white; font-weight: bold; color: var(--bosch-blue); }
+
+        /* Main Layout Scaling */
+        .main-layout { display: none; padding: 10px 30px; gap: 20px; box-sizing: border-box; width: 100%; height: calc(100vh - 150px); }
+        .content-area { flex: 3; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+        
+        .chart-container { background: white; padding: 20px; border-top: 4px solid var(--bosch-blue); flex: 2; min-height: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .log-container { background: white; padding: 20px; border-top: 4px solid #ccc; flex: 1; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        .sidebar { flex: 1; background: white; padding: 20px; border-top: 4px solid var(--bosch-light-blue); overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.05); max-width: 450px; }
+        
+        /* Control Rows */
+        .control-row { display: flex; align-items: center; padding: 12px; margin-bottom: 10px; border: 1px solid #dee2e6; border-left: 8px solid #ccc; gap: 10px; font-size: 14px; }
         .status-red { border-left-color: var(--bosch-red); background: #fce8e8; }
         .status-yellow { border-left-color: #ffcf00; background: #fff9e6; }
         .status-green { border-left-color: var(--bosch-green); background: #e6f4ed; }
         .status-overdue { border-left-color: #b00000; background: #ffdce0; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-        .btn { width: 32px; height: 32px; cursor: pointer; border: none; color: white; font-weight: bold; }
-        .btn-plus { background: var(--bosch-light-blue); } .btn-minus { background: var(--bosch-blue); } .btn-wplan { background: var(--bosch-red); font-size: 10px; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+
+        .btn { width: 36px; height: 36px; cursor: pointer; border: none; color: white; font-weight: bold; border-radius: 2px; }
+        .btn-plus { background: var(--bosch-light-blue); }
+        .btn-minus { background: var(--bosch-blue); }
+        .btn-wplan { background: var(--bosch-red); font-size: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; padding: 10px; border-bottom: 2px solid #eee; }
+        td { padding: 10px; border-bottom: 1px solid #f8f8f8; }
     </style>
 </head>
 <body>
@@ -51,7 +58,7 @@
     <div id="auth-overlay">
         <div class="auth-box" id="login-form">
             <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-            <p>Login</p>
+            <p>Wartungs-Dashboard Login</p>
             <input type="email" id="login-email" placeholder="E-Mail">
             <input type="password" id="login-pass" placeholder="Passwort">
             <button class="nav-btn" style="width:100%; background:var(--bosch-blue); color:white" onclick="handleLogin()">Anmelden</button>
@@ -60,36 +67,40 @@
         <div class="auth-box" id="register-form" style="display:none">
             <div class="bosch-brand">BOSCH<span> AGIE</span></div>
             <p>Registrierung</p>
-            <input type="text" id="reg-name" placeholder="Name">
+            <input type="text" id="reg-name" placeholder="Vollständiger Name">
             <input type="email" id="reg-email" placeholder="E-Mail">
             <input type="password" id="reg-pass" placeholder="Passwort">
             <input type="password" id="reg-invite" placeholder="Sicherheitsschlüssel">
-            <button class="nav-btn" style="width:100%; background:var(--bosch-light-blue); color:white" onclick="handleRegister()">Erstellen</button>
-            <p onclick="showRegister(false)" style="cursor:pointer; text-decoration:underline; font-size:12px; margin-top:15px">Zurück</p>
+            <button class="nav-btn" style="width:100%; background:var(--bosch-light-blue); color:white" onclick="handleRegister()">Account erstellen</button>
+            <p onclick="showRegister(false)" style="cursor:pointer; text-decoration:underline; font-size:12px; margin-top:15px">Zurück zum Login</p>
         </div>
     </div>
 
     <div class="top-bar"></div>
     <div class="header">
-        <div style="display:flex; justify-content: space-between; align-items: center;">
-            <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-            <div><span id="user-display" style="font-weight:bold"></span> <button onclick="handleLogout()" style="margin-left:10px">Logout</button></div>
+        <div class="bosch-brand">BOSCH<span> AGIE</span></div>
+        <div style="text-align: right;">
+            <span id="user-display" style="font-weight:bold; color:var(--bosch-blue)"></span><br>
+            <small style="color:#666">Version 23.01.2026 | Full-Scale</small>
+            <button onclick="handleLogout()" style="margin-left:15px; padding:2px 8px; cursor:pointer">Logout</button>
         </div>
-        <div style="font-size:11px; color:#666; margin-top:5px">Version: 23.01.2026-V4 | Fix: Undefined Property Error</div>
     </div>
 
     <div class="action-bar">
         <button class="nav-btn" style="background: var(--bosch-blue); color:white" onclick="document.getElementById('fileInput').click()">📥 JSON Laden & Synchronisieren</button>
+        <button class="nav-btn" onclick="exportHistory()">CSV Export</button>
     </div>
     <input type="file" id="fileInput" style="display:none" accept=".json">
 
     <div class="main-layout" id="dashboard">
         <div class="content-area">
-            <div class="chart-container"><canvas id="myChart"></canvas></div>
-            <div style="background:white; padding:15px; border-top:4px solid #ccc">
-                <div style="font-weight:bold; margin-bottom:10px; color:var(--bosch-blue)">🕒 ÄNDERUNGS-LOG</div>
-                <table style="width:100%; font-size:12px; border-collapse:collapse">
-                    <thead><tr style="text-align:left; border-bottom:1px solid #eee"><th>Zeit</th><th>Agie</th><th>Aktion</th><th>User</th></tr></thead>
+            <div class="chart-container">
+                <canvas id="myChart"></canvas>
+            </div>
+            <div class="log-container">
+                <div style="font-weight:bold; margin-bottom:10px; color:var(--bosch-blue)">🕒 LETZTE AKTIVITÄTEN</div>
+                <table>
+                    <thead><tr><th>Zeitstempel</th><th>Agie</th><th>Ereignis</th><th>Benutzer</th></tr></thead>
                     <tbody id="tracking-body"></tbody>
                 </table>
             </div>
@@ -117,55 +128,41 @@
         function showRegister(s) { document.getElementById('login-form').style.display = s?'none':'block'; document.getElementById('register-form').style.display = s?'block':'none'; }
         function handleRegister() {
             const n = document.getElementById('reg-name').value, e = document.getElementById('reg-email').value, p = document.getElementById('reg-pass').value, i = document.getElementById('reg-invite').value;
-            if(i !== "bosch2026") return alert("Code falsch!");
-            auth.createUserWithEmailAndPassword(e, p).then(res => res.user.updateProfile({displayName: n})).then(() => location.reload()).catch(e => alert(e.message));
+            if(i !== "bosch2026") return alert("Schlüssel falsch!");
+            auth.createUserWithEmailAndPassword(e, p).then(res => res.user.updateProfile({displayName: n})).then(() => location.reload());
         }
-        function handleLogin() { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert("Fehler: " + e.message)); }
+        function handleLogin() { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert("Login-Fehler")); }
         function handleLogout() { auth.signOut().then(() => location.reload()); }
 
         auth.onAuthStateChanged(user => {
             if(user) {
                 document.getElementById('auth-overlay').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'flex';
-                document.getElementById('user-display').innerText = user.displayName;
+                document.getElementById('user-display').innerText = "👤 " + user.displayName;
                 db.ref('maintenanceState').on('value', snap => { 
                     const val = snap.val();
-                    if(val) { 
-                        state = val; 
-                        if(!state.extraCycles) state.extraCycles = {};
-                        if(!state.agieOffsets) state.agieOffsets = {};
-                        if(!state.history) state.history = [];
-                        if(state.cloudRawData) rawData = state.cloudRawData; 
-                        updateUI(); 
-                    } 
+                    if(val) { state = val; if(state.cloudRawData) rawData = state.cloudRawData; updateUI(); } 
                 });
             }
         });
 
         document.getElementById('fileInput').addEventListener('change', e => {
             const file = e.target.files[0];
-            if(!file) return;
             const reader = new FileReader();
             reader.onload = ev => { 
                 try {
                     const data = JSON.parse(ev.target.result);
-                    rawData = data;
                     state.cloudRawData = data;
-                    db.ref('maintenanceState').update(state).then(() => {
-                        alert("✅ JSON erfolgreich synchronisiert!");
-                    });
-                } catch(err) {
-                    alert("❌ JSON Fehler: " + err.message);
-                }
+                    db.ref('maintenanceState').update(state).then(() => alert("Daten synchronisiert!"));
+                } catch(err) { alert("Fehler beim JSON-Format!"); }
             };
             reader.readAsText(file);
         });
 
         function updateUI() {
-            if(!rawData || !Array.isArray(rawData)) return;
+            if(!rawData || rawData.length === 0) return;
             const processed = rawData.map(item => {
                 const id = item.StationNo;
-                if(!id) return null;
                 const ist = Number(item.Parts || 0) - (state.agieOffsets[id] || 0);
                 const count = state.extraCycles[id] || 0;
                 const diff = (16000 + (count * 16000)) - ist;
@@ -173,13 +170,8 @@
                 if(diff < 0) { s = "status-overdue"; c = "#b00000"; } 
                 else if(diff < 500) { s = "status-red"; c = "#d50000"; } 
                 else if(diff < 5000) { s = "status-yellow"; c = "#ffcf00"; }
-                
-                // FIX: Sicherstellen, dass packages[index] existiert
-                const pkgIdx = Math.abs(count) % packages.length;
-                const currentPkg = packages[pkgIdx] || "N/A";
-
-                return { id, diff, ist, count, status: s, color: c, pkg: currentPkg };
-            }).filter(i => i !== null).sort((a,b) => a.diff - b.diff);
+                return { id, diff, ist, count, status: s, color: c, pkg: packages[Math.abs(count)%packages.length] };
+            }).sort((a,b) => a.diff - b.diff);
 
             renderChart(processed);
             renderControls(processed);
@@ -188,238 +180,14 @@
 
         function renderControls(data) {
             const list = document.getElementById('controlsList');
-            list.innerHTML = "";
+            list.innerHTML = `<h3 style="margin-top:0; color:var(--bosch-blue)">Steuerung</h3>`;
             data.forEach(d => {
                 list.innerHTML += `<div class="control-row ${d.status}">
                     <div style="flex:1"><b>A${d.id}</b><br><small>${d.pkg}</small></div>
-                    <div style="flex:1"><b>${d.diff.toLocaleString()}</b></div>
+                    <div style="flex:1; font-weight:bold; font-size:16px">${d.diff.toLocaleString()}</div>
                     <button class="btn btn-wplan" ${d.ist < 215500 ? 'disabled' : ''} onclick="wpReset('${d.id}')">WP</button>
                     <button class="btn btn-minus" onclick="change('${d.id}', -1)">-</button>
-                    <span style="width:20px;text-align:center"><b>${d.count}</b></span>
-                    <button class="btn btn-plus" ${d.diff > 5000 ? 'disabled' : ''} onclick="change('${d.id}', 1)">+</button>
-                </div>`;
-            });
-        }
-
-        function change(id, delta) {
-            state.extraCycles[id] = Math.max(0, (state.extraCycles[id]||0) + delta);
-            saveLog(id, `Zähler ${delta>0?'+1':'-1'}`, state.extraCycles[id]);
-        }
-
-        function wpReset(id) {
-            if(prompt("Admin-Code (216k):") === "23091861") {
-                state.agieOffsets[id] = (state.agieOffsets[id]||0) + 216000;
-                state.extraCycles[id] = 0;
-                saveLog(id, "WP-Reset", 0);
-            }
-        }
-
-        function saveLog(id, ev, val) {
-            if(!state.history) state.history = [];
-            state.history.push({ Zeitstempel: new Date().toLocaleString('de-DE'), Agie: id, Ereignis: ev, Benutzer: auth.currentUser.displayName, Zaehlerstand: val });
-            db.ref('maintenanceState').update(state);
-        }
-
-        function renderLogs() {
-            const b = document.getElementById('tracking-body'); b.innerHTML = "";
-            const logs = state.history ? [...state.history].reverse().slice(0, 10) : [];
-            logs.forEach(l => {
-                b.innerHTML += `<tr><td>${l.Zeitstempel}</td><td>A${l.Agie}</td><td>${l.Ereignis}</td><td>${l.Benutzer}</td></tr>`;
-            });
-        }
-
-        function renderChart(data) {
-            const ctx = document.getElementById('myChart').getContext('2d');
-            if(myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'bar', data: { labels: data.map(d=>"A"+d.id), datasets:[{data: data.map(d=>d.diff), backgroundColor: data.map(d=>d.color)}] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: false, datalabels: { anchor:'end', align:'top' } } }
-            });
-        }
-    </script>
-</body>
-</html>ground: linear-gradient(90deg, var(--bosch-red) 25%, var(--bosch-blue) 25%, var(--bosch-blue) 50%, var(--bosch-light-blue) 50%, var(--bosch-light-blue) 75%, var(--bosch-green) 75%); position: fixed; top: 0; left: 0; z-index: 3000; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bosch-gray); margin: 0; padding: 20px; padding-top: 50px; display: flex; flex-direction: column; align-items: center; }
-        
-        #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bosch-gray); z-index: 2000; display: flex; justify-content: center; align-items: center; }
-        .auth-box { background: white; padding: 40px; border-top: 6px solid var(--bosch-red); width: 380px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .auth-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #bfc0c2; }
-        
-        .header { width: 98%; max-width: 1600px; background: white; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .bosch-brand { color: var(--bosch-red); font-weight: 900; font-size: 24px; }
-        .bosch-brand span { color: var(--bosch-blue); }
-
-        .info-bar { font-size: 12px; color: #525f6b; margin-top: 10px; display: flex; gap: 20px; border-top: 1px solid #eee; padding-top: 10px; }
-        .info-tag { font-weight: bold; color: var(--bosch-blue); }
-
-        .action-bar { width: 98%; max-width: 1600px; display: flex; gap: 10px; margin-bottom: 15px; }
-        .nav-btn { padding: 10px 15px; cursor: pointer; border: 1px solid #bfc0c2; background: white; font-weight: bold; color: var(--bosch-blue); }
-
-        .main-layout { display: none; width: 98%; max-width: 1600px; gap: 20px; }
-        .content-area { flex: 3; display: flex; flex-direction: column; gap: 20px; }
-        .chart-container { background: white; padding: 20px; border-top: 4px solid var(--bosch-blue); min-height: 400px; }
-        
-        .sidebar { flex: 1.5; background: white; padding: 15px; border-top: 4px solid var(--bosch-light-blue); height: 80vh; overflow-y: auto; }
-        .control-row { display: flex; align-items: center; padding: 10px; margin-bottom: 8px; border: 1px solid #dee2e6; border-left: 6px solid #ccc; gap: 8px; }
-        
-        /* Log Tabelle */
-        .log-container { background: white; padding: 15px; border-top: 4px solid #bfc0c2; border-radius: 2px; }
-        .tracking-table { width: 100%; font-size: 13px; border-collapse: collapse; }
-        .tracking-table th { text-align: left; padding: 8px; border-bottom: 2px solid #eee; color: var(--bosch-blue); }
-        .tracking-table td { padding: 8px; border-bottom: 1px solid #f0f0f0; }
-
-        .status-red { border-left-color: var(--bosch-red); background: #fce8e8; }
-        .status-yellow { border-left-color: #ffcf00; background: #fff9e6; }
-        .status-green { border-left-color: var(--bosch-green); background: #e6f4ed; }
-        .status-overdue { border-left-color: #b00000; background: #ffdce0; }
-
-        .btn { width: 32px; height: 32px; cursor: pointer; border: none; color: white; font-weight: bold; }
-        .btn-plus { background: var(--bosch-light-blue); }
-        .btn-minus { background: var(--bosch-blue); }
-        .btn-wplan { background: var(--bosch-red); font-size: 10px; }
-    </style>
-</head>
-<body>
-
-    <div id="auth-overlay">
-        <div class="auth-box" id="login-form">
-            <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-            <p>Dashboard Login</p>
-            <input type="email" id="login-email" placeholder="E-Mail">
-            <input type="password" id="login-pass" placeholder="Passwort">
-            <button class="nav-btn" style="width:100%; background:var(--bosch-blue); color:white" onclick="handleLogin()">Anmelden</button>
-            <p onclick="showRegister(true)" style="cursor:pointer; text-decoration:underline; font-size:12px; margin-top:10px">Registrieren</p>
-        </div>
-        <div class="auth-box" id="register-form" style="display:none">
-            <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-            <p>Registrierung</p>
-            <input type="text" id="reg-name" placeholder="Name">
-            <input type="email" id="reg-email" placeholder="E-Mail">
-            <input type="password" id="reg-pass" placeholder="Passwort">
-            <input type="password" id="reg-invite" placeholder="Sicherheitsschlüssel">
-            <button class="nav-btn" style="width:100%; background:var(--bosch-light-blue); color:white" onclick="handleRegister()">Account erstellen</button>
-            <p onclick="showRegister(false)" style="cursor:pointer; text-decoration:underline; font-size:12px; margin-top:10px">Zurück zum Login</p>
-        </div>
-    </div>
-
-    <div class="top-bar"></div>
-    <div class="header">
-        <div style="display:flex; justify-content: space-between; align-items: center;">
-            <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-            <div><span id="user-display"></span> <button onclick="handleLogout()" style="margin-left:10px">Logout</button></div>
-        </div>
-        <div class="info-bar">
-            <div><span class="info-tag">Skript-Version:</span> 23.01.2026 - 00:15</div>
-            <div><span class="info-tag">Status:</span> <span id="cloud-status">Warten auf Login...</span></div>
-        </div>
-    </div>
-
-    <div class="action-bar">
-        <button class="nav-btn" style="background: var(--bosch-blue); color:white" onclick="document.getElementById('fileInput').click()">📥 JSON Laden</button>
-        <button class="nav-btn" onclick="exportHistory()">CSV Log Export</button>
-    </div>
-    <input type="file" id="fileInput" style="display:none" accept=".json">
-
-    <div class="main-layout" id="dashboard">
-        <div class="content-area">
-            <div class="chart-container"><canvas id="myChart"></canvas></div>
-            <div class="log-container">
-                <div style="font-weight:bold; color:var(--bosch-blue); margin-bottom:10px;">🕒 ÄNDERUNGS-LOG (Letzte 10 Aktionen)</div>
-                <table class="tracking-table">
-                    <thead><tr><th>Zeitpunkt</th><th>Agie</th><th>Ereignis</th><th>Benutzer</th></tr></thead>
-                    <tbody id="tracking-body"></tbody>
-                </table>
-            </div>
-        </div>
-        <div class="sidebar" id="controlsList"></div>
-    </div>
-
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyD6xGCtU-felOyO_BRsFnVlB4yhC46FgYg",
-            authDomain: "bosch-agie-wartung.firebaseapp.com",
-            databaseURL: "https://bosch-agie-wartung-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "bosch-agie-wartung",
-            storageBucket: "bosch-agie-wartung.firebasestorage.app",
-            messagingSenderId: "211606405555",
-            appId: "1:211606405555:web:cc2475ca47804086a3cbc6"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth(), db = firebase.database();
-        Chart.register(ChartDataLabels);
-
-        let myChart, rawData = [], state = { extraCycles: {}, agieOffsets: {}, history: [], cloudRawData: [] };
-        const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
-
-        function showRegister(s) { document.getElementById('login-form').style.display = s?'none':'block'; document.getElementById('register-form').style.display = s?'block':'none'; }
-        function handleRegister() {
-            const n = document.getElementById('reg-name').value, e = document.getElementById('reg-email').value, p = document.getElementById('reg-pass').value, i = document.getElementById('reg-invite').value;
-            if(i !== "bosch2026") return alert("Sicherheitsschlüssel falsch!");
-            auth.createUserWithEmailAndPassword(e, p).then(res => res.user.updateProfile({displayName: n})).then(() => location.reload());
-        }
-        function handleLogin() { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(() => alert("Anmeldung fehlgeschlagen")); }
-        function handleLogout() { auth.signOut().then(() => location.reload()); }
-
-        auth.onAuthStateChanged(user => {
-            if(user) {
-                document.getElementById('auth-overlay').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'flex';
-                document.getElementById('user-display').innerText = "Angemeldet: " + user.displayName;
-                document.getElementById('cloud-status').innerText = "Verbunden mit Firebase Cloud";
-                
-                db.ref('maintenanceState').on('value', snap => { 
-                    if(snap.val()) { 
-                        state = snap.val(); 
-                        if(state.cloudRawData) rawData = state.cloudRawData; 
-                        updateUI(); 
-                    } 
-                });
-            }
-        });
-
-        document.getElementById('fileInput').addEventListener('change', e => {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = ev => { 
-                rawData = JSON.parse(ev.target.result);
-                state.cloudRawData = rawData; 
-                db.ref('maintenanceState').update(state).then(() => alert("JSON geladen & Cloud synchronisiert!"));
-            };
-            reader.readAsText(file);
-        });
-
-        function updateUI() {
-            renderLogs(); // Log zuerst rendern
-            if(!rawData || rawData.length === 0) return;
-            const processed = rawData.map(item => {
-                const id = item.StationNo, ist = Number(item.Parts) - (state.agieOffsets[id] || 0);
-                const count = state.extraCycles[id] || 0, diff = (16000 + (count * 16000)) - ist;
-                let s = "status-green", c = "#008a4f";
-                if(diff < 0) { s = "status-overdue"; c = "#b00000"; } else if(diff < 500) { s = "status-red"; c = "#d50000"; } else if(diff < 5000) { s = "status-yellow"; c = "#ffcf00"; }
-                return { id, diff, ist, count, status: s, color: c, pkg: packages[count % 13] };
-            }).sort((a,b) => a.diff - b.diff);
-            renderChart(processed);
-            renderControls(processed);
-        }
-
-        function renderLogs() {
-            const b = document.getElementById('tracking-body'); b.innerHTML = "";
-            const logs = state.history ? [...state.history].reverse().slice(0, 10) : [];
-            logs.forEach(l => {
-                b.innerHTML += `<tr><td><b>${l.Zeitstempel}</b></td><td>A${l.Agie}</td><td>${l.Ereignis}</td><td>${l.Benutzer}</td></tr>`;
-            });
-        }
-
-        function renderControls(data) {
-            const list = document.getElementById('controlsList');
-            list.innerHTML = "";
-            data.forEach(d => {
-                list.innerHTML += `<div class="control-row ${d.status}">
-                    <div style="flex:1"><b>A${d.id}</b><br><small>${d.pkg}</small></div>
-                    <div style="flex:1"><b>${d.diff.toLocaleString()}</b></div>
-                    <button class="btn btn-wplan" ${d.ist < 215500 ? 'disabled' : ''} onclick="wpReset('${d.id}')">WP</button>
-                    <button class="btn btn-minus" onclick="change('${d.id}', -1)">-</button>
-                    <span style="width:20px;text-align:center"><b>${d.count}</b></span>
+                    <span style="width:25px; text-align:center"><b>${d.count}</b></span>
                     <button class="btn btn-plus" ${d.diff > 5000 ? 'disabled' : ''} onclick="change('${d.id}', 1)">+</button>
                 </div>`;
             });
@@ -446,19 +214,35 @@
             db.ref('maintenanceState').update(state);
         }
 
+        function renderLogs() {
+            const b = document.getElementById('tracking-body'); b.innerHTML = "";
+            (state.history || []).slice(-15).reverse().forEach(l => {
+                b.innerHTML += `<tr><td>${l.Zeitstempel}</td><td>A${l.Agie}</td><td>${l.Ereignis}</td><td>${l.Benutzer}</td></tr>`;
+            });
+        }
+
         function renderChart(data) {
             const ctx = document.getElementById('myChart').getContext('2d');
             if(myChart) myChart.destroy();
             myChart = new Chart(ctx, {
-                type: 'bar', data: { labels: data.map(d=>"A"+d.id), datasets:[{data: data.map(d=>d.diff), backgroundColor: data.map(d=>d.color)}] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: false, datalabels: { anchor:'end', align:'top' } } }
+                type: 'bar',
+                data: { labels: data.map(d=>"A"+d.id), datasets:[{data: data.map(d=>d.diff), backgroundColor: data.map(d=>d.color)}] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 30 } },
+                    plugins: { legend: false, datalabels: { anchor:'end', align:'top', font: { weight: 'bold' } } } 
+                }
             });
         }
+
         function exportHistory() {
             let csv = "\uFEFFZeit;Agie;Ereignis;User;Stand\n";
-            state.history.forEach(r => csv += `${r.Zeitstempel};${r.Agie};${r.Ereignis};${r.Benutzer};${r.Zaehlerstand}\n`);
-            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-            link.download = "Agie_Wartung_Log.csv"; link.click();
+            (state.history||[]).forEach(r => csv += `${r.Zeitstempel};${r.Agie};${r.Ereignis};${r.Benutzer};${r.Zaehlerstand}\n`);
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+            link.download = "Agie_Wartung_FullLog.csv";
+            link.click();
         }
     </script>
 </body>
