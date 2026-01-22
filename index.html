@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Final Security</title>
+    <title>Agie Wartung - Full Security Sync</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -18,8 +18,8 @@
         .status-yellow { background-color: #fff3cd !important; border-left: 6px solid #ffc107; }
         .status-green { background-color: #d4edda !important; border-left: 6px solid #28a745; }
         .btn { width: 32px; height: 32px; cursor: pointer; border: none; font-weight: bold; color: white; border-radius: 3px; }
+        .btn:disabled { background: #ccc !important; cursor: not-allowed; opacity: 0.3; }
         .btn-plus { background: #00b5e2; } 
-        .btn-plus:disabled { background: #ccc; cursor: not-allowed; opacity: 0.3; }
         .btn-minus { background: #003a6c; } 
         .btn-wplan { background: #d50000; font-size: 10px; }
         .action-bar { margin-bottom: 15px; display: flex; gap: 10px; }
@@ -91,7 +91,7 @@
 
         async function uploadJsonToCloud() {
             if (rawData.length === 0) return alert("Zuerst JSON laden!");
-            if (confirm("Maschinendaten spiegeln?")) {
+            if (confirm("Maschinendaten für alle Geräte spiegeln?")) {
                 state.cloudRawData = rawData;
                 await saveToCloud();
                 alert("Erfolgreich gespiegelt!");
@@ -125,13 +125,13 @@
             const container = document.getElementById('controlsList');
             container.innerHTML = "";
             data.forEach(d => {
-                const isLocked = d.diff > LIMIT_FREIGABE; // Sperren wenn über 500
+                const isLocked = d.diff > LIMIT_FREIGABE; 
                 const row = document.createElement('div');
                 row.className = `control-row ${d.status}`;
                 row.innerHTML = `
                     <div style="flex:1"><strong>Agie ${d.id}</strong><br><small>${d.packageName}</small></div>
                     <div style="flex:1; font-weight:bold">${d.diff.toLocaleString('de-DE')}</div>
-                    <button class="btn btn-wplan" onclick="wPlanReset('${d.id}')">WP</button>
+                    <button class="btn btn-wplan" ${isLocked ? 'disabled' : ''} onclick="wPlanReset('${d.id}')">WP</button>
                     <button class="btn btn-minus" onclick="changeCount('${d.id}', -1, ${d.rawIst})">-</button>
                     <span style="width:25px; text-align:center; font-weight:bold">${d.count}</span>
                     <button class="btn btn-plus" ${isLocked ? 'disabled' : ''} onclick="changeCount('${d.id}', 1, ${d.rawIst})">+</button>
@@ -153,7 +153,7 @@
         }
 
         function wPlanReset(id) {
-            if(confirm(`WP-Reset für Agie ${id}?`)) {
+            if(confirm(`Großer Wartungsplan-Reset (216.000) für Agie ${id} durchführen?`)) {
                 state.agieOffsets[id] = (state.agieOffsets[id] || 0) + RESET_VAL;
                 state.extraCycles[id] = 0;
                 state.history.push({ Zeitstempel: new Date().toLocaleString('de-DE'), Agie: id, Ereignis: "WP-Reset", Zaehler: 0, Gesamtstueck: "N/A" });
