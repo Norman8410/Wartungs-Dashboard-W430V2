@@ -191,7 +191,7 @@
                     datasets: [{ 
                         data: data.map(d => d.diff), 
                         backgroundColor: data.map(d => d.barColor),
-                        customData: data.map(d => ({ pkg: d.packageName, ist: d.rawIst }))
+                        customData: data.map(d => ({ pkg: d.packageName, ist: d.ist })) // Nutzt korrigiertes Ist
                     }]
                 },
                 options: { 
@@ -202,17 +202,28 @@
                             callbacks: {
                                 label: (ctx) => {
                                     const d = ctx.dataset.customData[ctx.dataIndex];
-                                    return [` Rest: ${ctx.raw.toLocaleString('de-DE')}`, ` Paket: ${d.pkg}`, ` Ist: ${d.ist.toLocaleString('de-DE')}`];
+                                    return [
+                                        ` Rest: ${ctx.raw.toLocaleString('de-DE')}`, 
+                                        ` Paket: ${d.pkg}`, 
+                                        ` Stückzahl gesamt seit Planwechsel: ${d.ist.toLocaleString('de-DE')}`
+                                    ];
                                 }
                             }
                         },
-                        datalabels: { anchor: 'end', align: 'top', rotation: -90, offset: 5, font: { weight: 'bold' }, color: '#003a6c', formatter: v => v.toLocaleString('de-DE') }
+                        datalabels: { 
+                            anchor: 'end', 
+                            align: 'top', 
+                            rotation: -90, 
+                            offset: 5, 
+                            font: { weight: 'bold' }, 
+                            color: '#003a6c', 
+                            formatter: v => v.toLocaleString('de-DE') 
+                        }
                     },
                     scales: { y: { beginAtZero: false, grace: '15%' } }
                 }
             });
         }
-
         document.getElementById('fileInput').addEventListener('change', e => {
             const r = new FileReader();
             r.onload = ev => { rawData = JSON.parse(ev.target.result); updateDisplay(); };
