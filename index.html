@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch Authentication</title>
+    <title>Agie Wartung - Bosch Secured</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -14,9 +14,10 @@
         
         /* Auth Screens */
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #eff1f2; z-index: 2000; display: flex; justify-content: center; align-items: center; }
-        .auth-box { background: white; padding: 30px; border-top: 6px solid #d50000; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 380px; text-align: center; }
-        .auth-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #bfc0c2; box-sizing: border-box; }
-        .auth-btn { width: 100%; padding: 12px; background: #003a6c; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .auth-box { background: white; padding: 35px; border-top: 6px solid #d50000; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 380px; text-align: center; border-radius: 2px; }
+        .auth-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #bfc0c2; box-sizing: border-box; font-size: 14px; }
+        .auth-btn { width: 100%; padding: 12px; background: #003a6c; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; border-radius: 2px; }
+        .auth-btn:hover { background: #005691; }
         .toggle-link { color: #00b5e2; cursor: pointer; font-size: 0.85em; text-decoration: underline; margin-top: 15px; display: inline-block; }
 
         /* Dashboard Styles */
@@ -24,17 +25,20 @@
         .bosch-brand { color: #d50000; font-weight: 900; font-size: 24px; letter-spacing: -1px; }
         .bosch-brand span { color: #003a6c; }
         
-        .main-layout { display: flex; width: 98%; max-width: 1600px; gap: 20px; display: none; } /* Hidden until login */
-        .chart-container { background: white; padding: 20px; border-top: 4px solid #003a6c; flex: 3; min-height: 400px; }
-        .sidebar { flex: 1.5; background: white; padding: 15px; border-top: 4px solid #00b5e2; height: 80vh; overflow-y: auto; }
+        .main-layout { display: none; width: 98%; max-width: 1600px; gap: 20px; }
+        .chart-container { background: white; padding: 20px; border-top: 4px solid #003a6c; border-radius: 2px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 450px; }
+        .sidebar { flex: 1.5; background: white; padding: 15px; border-top: 4px solid #00b5e2; height: 82vh; overflow-y: auto; border-radius: 2px; }
         
-        .tracking-container { background: white; padding: 15px; margin-top: 20px; border-top: 4px solid #bfc0c2; }
-        .tracking-table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
-        .tracking-table th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; }
+        .control-row { display: flex; align-items: center; padding: 12px; margin-bottom: 8px; border: 1px solid #dee2e6; gap: 10px; border-radius: 2px; }
+        .status-red { border-left: 6px solid #d50000; background: #fce8e8; }
+        .status-yellow { border-left: 6px solid #ffcf00; background: #fff9e6; }
+        .status-green { border-left: 6px solid #008a4f; background: #e6f4ed; }
+        .status-overdue { border-left: 6px solid #b00000; background: #ffdce0; animation: pulse 2s infinite; }
         
-        .control-row { display: flex; align-items: center; padding: 10px; margin-bottom: 5px; border: 1px solid #ddd; gap: 10px; }
-        .btn { width: 32px; height: 32px; cursor: pointer; border: none; color: white; font-weight: bold; }
-        .btn-plus { background: #00b5e2; } .btn-minus { background: #003a6c; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+        .btn { width: 34px; height: 34px; cursor: pointer; border: none; color: white; font-weight: bold; border-radius: 2px; }
+        .btn:disabled { background: #bfc0c2 !important; cursor: not-allowed; }
+        .btn-plus { background: #00b5e2; } .btn-minus { background: #003a6c; } .btn-wplan { background: #d50000; font-size: 10px; }
     </style>
 </head>
 <body>
@@ -42,21 +46,21 @@
     <div id="auth-overlay">
         <div class="auth-box" id="login-form">
             <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-            <p>Bitte anmelden</p>
-            <input type="email" id="login-email" placeholder="E-Mail (z.B. mueller@bosch.de)">
+            <p style="color: #525f6b;">Wartungs-Dashboard Login</p>
+            <input type="email" id="login-email" placeholder="E-Mail">
             <input type="password" id="login-pass" placeholder="Passwort">
-            <button class="auth-btn" onclick="handleLogin()">Einloggen</button>
-            <span class="toggle-link" onclick="showRegister(true)">Neuen Account registrieren</span>
+            <button class="auth-btn" onclick="handleLogin()">Anmelden</button>
+            <span class="toggle-link" onclick="showRegister(true)">Neuen Account anlegen</span>
         </div>
 
         <div class="auth-box" id="register-form" style="display:none">
             <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-            <p>Registrierung</p>
-            <input type="text" id="reg-name" placeholder="Dein Name (für das Tracking)">
+            <p style="color: #525f6b;">Registrierung</p>
+            <input type="text" id="reg-name" placeholder="Vollständiger Name">
             <input type="email" id="reg-email" placeholder="E-Mail">
-            <input type="password" id="reg-pass" placeholder="Eigenes Passwort (min. 6 Zeichen)">
-            <hr>
-            <input type="password" id="reg-invite" placeholder="Einladungs-Code (bosch2026)" style="border: 2px solid #00b5e2">
+            <input type="password" id="reg-pass" placeholder="Passwort wählen (min. 6 Zeichen)">
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+            <input type="password" id="reg-invite" placeholder="Sicherheitsschlüssel eingeben" style="border: 2px solid #003a6c">
             <button class="auth-btn" style="background:#00b5e2" onclick="handleRegister()">Account erstellen</button>
             <span class="toggle-link" onclick="showRegister(false)">Zurück zum Login</span>
         </div>
@@ -67,24 +71,27 @@
         <div style="display:flex; justify-content: space-between; align-items: center;">
             <div class="bosch-brand">BOSCH<span> AGIE</span></div>
             <div>
-                <span id="user-display" style="font-weight:bold; color:#003a6c"></span>
-                <button onclick="handleLogout()" style="margin-left:15px; cursor:pointer">Logout</button>
+                <span id="user-display" style="font-weight:bold; color:#003a6c; font-size: 14px;"></span>
+                <button onclick="handleLogout()" style="margin-left:15px; cursor:pointer; padding: 5px 10px; border: 1px solid #bfc0c2; background: white;">Logout</button>
             </div>
         </div>
     </div>
 
     <div class="main-layout" id="dashboard">
-        <div style="flex: 3;">
+        <div style="flex: 3; display: flex; flex-direction: column; gap: 20px;">
             <div class="chart-container"><canvas id="myChart"></canvas></div>
-            <div class="tracking-container">
-                <div style="font-weight:bold; color:#003a6c; margin-bottom:10px">LETZTE AKTIVITÄTEN</div>
-                <table class="tracking-table">
-                    <thead><tr><th>Zeit</th><th>Agie</th><th>Aktion</th><th>Benutzer</th></tr></thead>
+            <div style="background: white; padding: 15px; border-top: 4px solid #bfc0c2; border-radius: 2px;">
+                <div style="font-weight:bold; color:#003a6c; margin-bottom:10px; font-size: 13px;">🕒 LIVE-TRACKING</div>
+                <table style="width:100%; border-collapse: collapse; font-size: 0.85em;" id="tracking-table">
+                    <thead><tr style="text-align:left; color:#525f6b; border-bottom: 1px solid #eee;"><th>Zeit</th><th>Agie</th><th>Aktion</th><th>Benutzer</th><th>Stand</th></tr></thead>
                     <tbody id="tracking-body"></tbody>
                 </table>
             </div>
         </div>
-        <div class="sidebar" id="controlsList"></div>
+        <div class="sidebar">
+            <h3 style="color:#003a6c; border-bottom: 2px solid #bfc0c2; padding-bottom: 10px; margin-top: 0;">Prioritäten</h3>
+            <div id="controlsList"></div>
+        </div>
     </div>
 
     <script>
@@ -101,6 +108,7 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
+        Chart.register(ChartDataLabels);
 
         // --- AUTH LOGIC ---
         function showRegister(show) {
@@ -114,71 +122,134 @@
             const pass = document.getElementById('reg-pass').value;
             const invite = document.getElementById('reg-invite').value;
 
-            if (invite !== "bosch2026") return alert("Falscher Einladungs-Code!");
-            if (!name || pass.length < 6) return alert("Name fehlt oder Passwort zu kurz (min 6 Zeichen)!");
+            // Der Code wird hier im Skript geprüft, steht aber nicht mehr im HTML-Text
+            if (invite !== "bosch2026") {
+                alert("Ungültiger Sicherheitsschlüssel! Registrierung abgelehnt.");
+                return;
+            }
 
             auth.createUserWithEmailAndPassword(email, pass)
                 .then((userCredential) => {
                     return userCredential.user.updateProfile({ displayName: name });
                 })
+                .then(() => { location.reload(); })
                 .catch(error => alert("Fehler: " + error.message));
         }
 
         function handleLogin() {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
-            auth.signInWithEmailAndPassword(email, pass).catch(error => alert("Fehler: " + error.message));
+            auth.signInWithEmailAndPassword(email, pass).catch(error => alert("Login fehlgeschlagen."));
         }
 
-        function handleLogout() { auth.signOut(); location.reload(); }
+        function handleLogout() { auth.signOut().then(() => location.reload()); }
 
         auth.onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('auth-overlay').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'flex';
-                document.getElementById('user-display').innerText = "Angemeldet als: " + user.displayName;
+                document.getElementById('user-display').innerText = "👤 " + user.displayName;
                 initDashboard();
-            } else {
-                document.getElementById('auth-overlay').style.display = 'flex';
-                document.getElementById('dashboard').style.display = 'none';
             }
         });
 
         // --- DASHBOARD LOGIC ---
-        let state = { extraCycles: {}, agieOffsets: {}, history: [], cloudRawData: [] };
-        const INTERVALL = 16000;
+        let myChart, rawData = [], state = { extraCycles: {}, agieOffsets: {}, history: [], cloudRawData: [] };
+        const INTERVALL = 16000, RESET_VAL = 216000, LIMIT_PLUS = 5000, WP_MIN = 215500;
+        const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
 
         function initDashboard() {
             db.ref('maintenanceState').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     state = data;
+                    if (state.cloudRawData) rawData = state.cloudRawData;
                     updateUI();
                 }
             });
         }
 
         function updateUI() {
-            // Tracking Tabelle
-            const body = document.getElementById('tracking-body');
-            body.innerHTML = "";
-            const logs = state.history ? [...state.history].reverse().slice(0, 8) : [];
-            logs.forEach(log => {
-                body.innerHTML += `<tr><td>${log.Zeitstempel}</td><td>A${log.Agie}</td><td>${log.Ereignis}</td><td>${log.Benutzer}</td></tr>`;
-            });
-            // Hier käme der Code für Chart & Controls (wie zuvor)
+            if (!rawData || rawData.length === 0) return;
+            const processed = rawData.map(item => {
+                const id = item.StationNo, ist = Number(item.Parts) - (state.agieOffsets[id] || 0);
+                const count = state.extraCycles[id] || 0;
+                const diff = (INTERVALL + (count * INTERVALL)) - ist;
+                let status = "status-green", color = "#008a4f";
+                if (diff < 0) { status = "status-overdue"; color = "#b00000"; }
+                else if (diff < 500) { status = "status-red"; color = "#d50000"; }
+                else if (diff < 5000) { status = "status-yellow"; color = "#ffcf00"; }
+                return { id, diff, ist, count, status, color, pkg: packages[count % 13] };
+            }).sort((a,b) => a.diff - b.diff);
+
+            renderChart(processed);
+            renderControls(processed);
+            renderLogs();
         }
 
-        async function logAction(agieId, event) {
-            const zeit = new Date().toLocaleString('de-DE');
+        function renderControls(data) {
+            const container = document.getElementById('controlsList');
+            container.innerHTML = "";
+            data.forEach(d => {
+                container.innerHTML += `
+                    <div class="control-row ${d.status}">
+                        <div style="flex:1"><b>A${d.id}</b><br><small>${d.pkg}</small></div>
+                        <div style="flex:1; font-weight:bold">${d.diff.toLocaleString()}</div>
+                        <button class="btn btn-wplan" ${d.ist < WP_MIN ? 'disabled' : ''} onclick="wpReset('${d.id}')">WP</button>
+                        <button class="btn btn-minus" onclick="changeCount('${d.id}', -1)">-</button>
+                        <span style="width:20px; text-align:center"><b>${d.count}</b></span>
+                        <button class="btn btn-plus" ${d.diff > LIMIT_PLUS ? 'disabled' : ''} onclick="changeCount('${d.id}', 1)">+</button>
+                    </div>`;
+            });
+        }
+
+        function changeCount(id, delta) {
+            if (confirm(`A${id} Zähler ändern?`)) {
+                state.extraCycles[id] = Math.max(0, (state.extraCycles[id] || 0) + delta);
+                saveLog(id, `Zähler ${delta > 0 ? '+1' : '-1'}`, state.extraCycles[id]);
+            }
+        }
+
+        function wpReset(id) {
+            if (prompt("Admin-Code für WP-Reset:") === "23091861") {
+                state.agieOffsets[id] = (state.agieOffsets[id] || 0) + RESET_VAL;
+                state.extraCycles[id] = 0;
+                saveLog(id, "WP-Reset", 0);
+            }
+        }
+
+        function saveLog(id, event, val) {
             if(!state.history) state.history = [];
             state.history.push({
-                Zeitstempel: zeit,
-                Agie: agieId,
+                Zeitstempel: new Date().toLocaleString('de-DE'),
+                Agie: id,
                 Ereignis: event,
-                Benutzer: auth.currentUser.displayName
+                Benutzer: auth.currentUser.displayName,
+                Zaehlerstand: val
             });
-            await db.ref('maintenanceState').update(state);
+            db.ref('maintenanceState').update(state);
+        }
+
+        function renderLogs() {
+            const body = document.getElementById('tracking-body');
+            body.innerHTML = "";
+            const logs = state.history ? [...state.history].reverse().slice(0, 10) : [];
+            logs.forEach(l => {
+                body.innerHTML += `<tr><td>${l.Zeitstempel}</td><td>A${l.Agie}</td><td>${l.Ereignis}</td><td>${l.Benutzer}</td><td>${l.Zaehlerstand || '-'}</td></tr>`;
+            });
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => "A"+d.id),
+                    datasets: [{ data: data.map(d => d.diff), backgroundColor: data.map(d => d.color) }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: false, datalabels: { anchor: 'end', align: 'top', formatter: v => v.toLocaleString() } } }
+            });
         }
     </script>
 </body>
