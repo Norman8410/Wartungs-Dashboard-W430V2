@@ -2,130 +2,107 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agie Wartung - Bosch Dashboard</title>
-    
+    <title>Agie Wartung - Bosch Full System</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-
     <style>
-        /* Bosch Corporate Design Farben & Basis */
-        :root {
-            --bosch-red: #d50000;
-            --bosch-blue: #003a6c;
-            --bosch-light-blue: #00b5e2;
-            --bosch-green: #008a4f;
-            --bosch-gray: #eff1f2;
-            --bosch-text: #525f6b;
-        }
-
+        :root { --bosch-red: #d50000; --bosch-blue: #003a6c; --bosch-light-blue: #00b5e2; --bosch-green: #008a4f; --bosch-gray: #eff1f2; }
         .top-bar { height: 8px; width: 100%; background: linear-gradient(90deg, var(--bosch-red) 25%, var(--bosch-blue) 25%, var(--bosch-blue) 50%, var(--bosch-light-blue) 50%, var(--bosch-light-blue) 75%, var(--bosch-green) 75%); position: fixed; top: 0; left: 0; z-index: 3000; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bosch-gray); margin: 0; padding: 20px; padding-top: 50px; display: flex; flex-direction: column; align-items: center; }
         
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bosch-gray); margin: 0; padding: 20px; padding-top: 50px; display: flex; flex-direction: column; align-items: center; }
-
         /* Auth Overlay */
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bosch-gray); z-index: 2000; display: flex; justify-content: center; align-items: center; }
-        .auth-box { background: white; padding: 40px; border-top: 6px solid var(--bosch-red); box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 380px; text-align: center; border-radius: 2px; }
-        .auth-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #bfc0c2; box-sizing: border-box; }
-        .auth-btn { width: 100%; padding: 12px; background: var(--bosch-blue); color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 2px; }
-        .auth-btn:hover { background: #005691; }
-        .toggle-link { color: var(--bosch-light-blue); cursor: pointer; font-size: 0.85em; text-decoration: underline; margin-top: 15px; display: inline-block; }
-
-        /* Header */
-        .header { display: flex; flex-direction: column; width: 98%; max-width: 1600px; background: white; padding: 15px; margin-bottom: 15px; border-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .bosch-brand { color: var(--bosch-red); font-weight: 900; font-size: 24px; letter-spacing: -1px; }
-        .bosch-brand span { color: var(--bosch-blue); }
+        .auth-box { background: white; padding: 40px; border-top: 6px solid var(--bosch-red); width: 380px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .auth-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #bfc0c2; }
         
-        /* Layout */
+        .header { width: 98%; max-width: 1600px; background: white; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .bosch-brand { color: var(--bosch-red); font-weight: 900; font-size: 24px; }
+        .bosch-brand span { color: var(--bosch-blue); }
+
+        .action-bar { width: 98%; max-width: 1600px; display: flex; gap: 10px; margin-bottom: 15px; }
+        .nav-btn { padding: 10px 15px; cursor: pointer; border: 1px solid #bfc0c2; background: white; font-weight: bold; color: var(--bosch-blue); }
+
         .main-layout { display: none; width: 98%; max-width: 1600px; gap: 20px; }
         .content-area { flex: 3; display: flex; flex-direction: column; gap: 20px; }
-        .chart-container { background: white; padding: 20px; border-top: 4px solid var(--bosch-blue); border-radius: 2px; min-height: 450px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .chart-container { background: white; padding: 20px; border-top: 4px solid var(--bosch-blue); min-height: 400px; }
         
-        /* Sidebar Controls */
-        .sidebar { flex: 1.5; background: white; padding: 15px; border-top: 4px solid var(--bosch-light-blue); height: 82vh; overflow-y: auto; border-radius: 2px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .control-row { display: flex; align-items: center; padding: 12px; margin-bottom: 8px; border: 1px solid #dee2e6; gap: 10px; border-radius: 2px; }
-        
-        /* Status Farben */
-        .status-red { border-left: 6px solid var(--bosch-red); background: #fce8e8; }
-        .status-yellow { border-left: 6px solid #ffcf00; background: #fff9e6; }
-        .status-green { border-left: 6px solid var(--bosch-green); background: #e6f4ed; }
-        .status-overdue { border-left: 6px solid #b00000; background: #ffdce0; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+        #doc-container { display: none; height: 500px; background: white; margin-bottom: 20px; border-top: 4px solid var(--bosch-light-blue); }
+        iframe { width: 100%; height: 100%; border: none; }
 
-        /* Buttons & Tabelle */
-        .btn { width: 34px; height: 34px; cursor: pointer; border: none; color: white; font-weight: bold; border-radius: 2px; }
+        .sidebar { flex: 1.5; background: white; padding: 15px; border-top: 4px solid var(--bosch-light-blue); height: 80vh; overflow-y: auto; }
+        .control-row { display: flex; align-items: center; padding: 10px; margin-bottom: 8px; border: 1px solid #dee2e6; border-left: 6px solid #ccc; gap: 8px; }
+        
+        .status-red { border-left-color: var(--bosch-red); background: #fce8e8; }
+        .status-yellow { border-left-color: #ffcf00; background: #fff9e6; }
+        .status-green { border-left-color: var(--bosch-green); background: #e6f4ed; }
+        .status-overdue { border-left-color: #b00000; background: #ffdce0; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+        .btn { width: 32px; height: 32px; cursor: pointer; border: none; color: white; font-weight: bold; }
         .btn-plus { background: var(--bosch-light-blue); }
         .btn-minus { background: var(--bosch-blue); }
         .btn-wplan { background: var(--bosch-red); font-size: 10px; }
-        .btn:disabled { background: #bfc0c2 !important; cursor: not-allowed; }
-
-        .tracking-container { background: white; padding: 15px; border-top: 4px solid #bfc0c2; border-radius: 2px; }
-        .tracking-table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
-        .tracking-table th { text-align: left; color: var(--bosch-text); padding: 8px; border-bottom: 1px solid #eee; }
-        .tracking-table td { padding: 8px; border-bottom: 1px solid #f8f9fa; }
     </style>
 </head>
 <body>
 
-    <div class="top-bar"></div>
-
     <div id="auth-overlay">
         <div class="auth-box" id="login-form">
             <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-            <p style="color: var(--bosch-text);">Wartungs-Dashboard Login</p>
+            <p>Dashboard Login</p>
             <input type="email" id="login-email" placeholder="E-Mail">
             <input type="password" id="login-pass" placeholder="Passwort">
-            <button class="auth-btn" onclick="handleLogin()">Anmelden</button>
-            <span class="toggle-link" onclick="showRegister(true)">Neuen Account registrieren</span>
+            <button class="nav-btn" style="width:100%; background:var(--bosch-blue); color:white" onclick="handleLogin()">Anmelden</button>
+            <p onclick="showRegister(true)" style="cursor:pointer; text-decoration:underline; font-size:12px; margin-top:10px">Registrieren</p>
         </div>
-
         <div class="auth-box" id="register-form" style="display:none">
             <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-            <p style="color: var(--bosch-text);">Registrierung</p>
-            <input type="text" id="reg-name" placeholder="Name (z.B. M. Müller)">
+            <p>Registrierung</p>
+            <input type="text" id="reg-name" placeholder="Name">
             <input type="email" id="reg-email" placeholder="E-Mail">
-            <input type="password" id="reg-pass" placeholder="Eigenes Passwort (min. 6 Zeichen)">
-            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+            <input type="password" id="reg-pass" placeholder="Passwort">
             <input type="password" id="reg-invite" placeholder="Sicherheitsschlüssel">
-            <button class="auth-btn" style="background: var(--bosch-light-blue);" onclick="handleRegister()">Account erstellen</button>
-            <span class="toggle-link" onclick="showRegister(false)">Zurück zum Login</span>
+            <button class="nav-btn" style="width:100%; background:var(--bosch-light-blue); color:white" onclick="handleRegister()">Account erstellen</button>
+            <p onclick="showRegister(false)" style="cursor:pointer; text-decoration:underline; font-size:12px; margin-top:10px">Zurück zum Login</p>
         </div>
     </div>
 
+    <div class="top-bar"></div>
     <div class="header">
         <div style="display:flex; justify-content: space-between; align-items: center;">
             <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-            <div>
-                <span id="user-display" style="font-weight:bold; color:var(--bosch-blue); margin-right: 15px;"></span>
-                <button onclick="handleLogout()" style="cursor:pointer; background:none; border:1px solid #bfc0c2; padding:5px 10px;">Logout</button>
-            </div>
+            <div><span id="user-display"></span> <button onclick="handleLogout()">Logout</button></div>
         </div>
     </div>
 
+    <div class="action-bar">
+        <button class="nav-btn" onclick="document.getElementById('fileInput').click()">1. JSON laden</button>
+        <button class="nav-btn" style="background: var(--bosch-blue); color:white" onclick="uploadToCloud()">2. In Cloud speichern</button>
+        <button class="nav-btn" onclick="toggleDoc()">📖 Anleitung</button>
+        <button class="nav-btn" onclick="exportHistory()">CSV Export</button>
+    </div>
+    <input type="file" id="fileInput" style="display:none" accept=".json">
+
     <div class="main-layout" id="dashboard">
         <div class="content-area">
+            <div id="doc-container">
+                <iframe src="https://docs.google.com/document/d/e/2PACX-1vREiAGblkkQ_sCwDL6VOuptaf9KRnBKfPM-q4RpYvaXDz6o121yOt4SIDUyTQiFNjrhb_A4rsKhpaei/pub?embedded=true"></iframe>
+            </div>
             <div class="chart-container"><canvas id="myChart"></canvas></div>
-            <div class="tracking-container">
-                <div style="font-weight:bold; color:var(--bosch-blue); margin-bottom:10px;">🕒 AKTIVITÄTS-LOG</div>
-                <table class="tracking-table">
-                    <thead><tr><th>Zeit</th><th>Agie</th><th>Aktion</th><th>Benutzer</th><th>Zähler</th></tr></thead>
+            <div style="background:white; padding:15px; border-top:4px solid #ccc">
+                <table style="width:100%; font-size:12px; border-collapse:collapse" id="log-table">
+                    <thead><tr style="text-align:left; border-bottom:1px solid #eee"><th>Zeit</th><th>Agie</th><th>Aktion</th><th>User</th></tr></thead>
                     <tbody id="tracking-body"></tbody>
                 </table>
             </div>
         </div>
-        <div class="sidebar">
-            <h3 style="color:var(--bosch-blue); border-bottom: 2px solid #bfc0c2; padding-bottom: 10px; margin-top: 0;">Steuerung</h3>
-            <div id="controlsList"></div>
-            <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
-            <button onclick="exportHistory()" style="width:100%; padding:10px; cursor:pointer;">Historie als CSV laden</button>
-        </div>
+        <div class="sidebar" id="controlsList"></div>
     </div>
 
     <script>
-        // FIREBASE KONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyD6xGCtU-felOyO_BRsFnVlB4yhC46FgYg",
             authDomain: "bosch-agie-wartung.firebaseapp.com",
@@ -135,75 +112,52 @@
             messagingSenderId: "211606405555",
             appId: "1:211606405555:web:cc2475ca47804086a3cbc6"
         };
-
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
+        const auth = firebase.auth(), db = firebase.database();
         Chart.register(ChartDataLabels);
 
-        // --- AUTH LOGIK ---
-        function showRegister(show) {
-            document.getElementById('login-form').style.display = show ? 'none' : 'block';
-            document.getElementById('register-form').style.display = show ? 'block' : 'none';
-        }
+        let myChart, rawData = [], state = { extraCycles: {}, agieOffsets: {}, history: [], cloudRawData: [] };
+        const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
+
+        function showRegister(s) { document.getElementById('login-form').style.display = s?'none':'block'; document.getElementById('register-form').style.display = s?'block':'none'; }
+        function toggleDoc() { const c = document.getElementById('doc-container'); c.style.display = c.style.display==='none'?'block':'none'; }
 
         function handleRegister() {
-            const name = document.getElementById('reg-name').value;
-            const email = document.getElementById('reg-email').value;
-            const pass = document.getElementById('reg-pass').value;
-            const invite = document.getElementById('reg-invite').value;
-
-            if (invite !== "bosch2026") return alert("Falscher Sicherheitsschlüssel!");
-            if (pass.length < 6) return alert("Passwort zu kurz!");
-
-            auth.createUserWithEmailAndPassword(email, pass)
-                .then(cred => cred.user.updateProfile({ displayName: name }))
-                .then(() => location.reload())
-                .catch(err => alert(err.message));
+            const n = document.getElementById('reg-name').value, e = document.getElementById('reg-email').value, p = document.getElementById('reg-pass').value, i = document.getElementById('reg-invite').value;
+            if(i !== "bosch2026") return alert("Code falsch!");
+            auth.createUserWithEmailAndPassword(e, p).then(res => res.user.updateProfile({displayName: n})).then(() => location.reload());
         }
-
-        function handleLogin() {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Login fehlgeschlagen."));
-        }
-
+        function handleLogin() { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); }
         function handleLogout() { auth.signOut().then(() => location.reload()); }
 
         auth.onAuthStateChanged(user => {
-            if (user) {
+            if(user) {
                 document.getElementById('auth-overlay').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'flex';
-                document.getElementById('user-display').innerText = "👤 " + user.displayName;
-                initApp();
+                document.getElementById('user-display').innerText = user.displayName;
+                db.ref('maintenanceState').on('value', snap => { if(snap.val()) { state = snap.val(); if(state.cloudRawData) rawData = state.cloudRawData; updateUI(); } });
             }
         });
 
-        // --- DASHBOARD LOGIK ---
-        let myChart, state = { extraCycles: {}, agieOffsets: {}, history: [], cloudRawData: [] };
-        const INTERVALL = 16000, RESET_VAL = 216000;
-        const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
+        document.getElementById('fileInput').addEventListener('change', e => {
+            const reader = new FileReader();
+            reader.onload = ev => { rawData = JSON.parse(ev.target.result); updateUI(); };
+            reader.readAsText(e.target.files[0]);
+        });
 
-        function initApp() {
-            db.ref('maintenanceState').on('value', snapshot => {
-                const data = snapshot.val();
-                if (data) {
-                    state = data;
-                    updateUI();
-                }
-            });
+        function uploadToCloud() {
+            if(rawData.length === 0) return alert("Zuerst JSON laden!");
+            state.cloudRawData = rawData;
+            db.ref('maintenanceState').update(state).then(() => alert("Cloud synchronisiert!"));
         }
 
         function updateUI() {
-            const raw = state.cloudRawData || [];
-            const processed = raw.map(item => {
+            if(!rawData.length) return;
+            const processed = rawData.map(item => {
                 const id = item.StationNo, ist = Number(item.Parts) - (state.agieOffsets[id] || 0);
-                const count = state.extraCycles[id] || 0;
-                const diff = (INTERVALL + (count * INTERVALL)) - ist;
+                const count = state.extraCycles[id] || 0, diff = (16000 + (count * 16000)) - ist;
                 let s = "status-green", c = "#008a4f";
-                if (diff < 0) { s = "status-overdue"; c = "#b00000"; }
-                else if (diff < 500) { s = "status-red"; c = "#d50000"; }
-                else if (diff < 5000) { s = "status-yellow"; c = "#ffcf00"; }
+                if(diff < 0) { s = "status-overdue"; c = "#b00000"; } else if(diff < 500) { s = "status-red"; c = "#d50000"; } else if(diff < 5000) { s = "status-yellow"; c = "#ffcf00"; }
                 return { id, diff, ist, count, status: s, color: c, pkg: packages[count % 13] };
             }).sort((a,b) => a.diff - b.diff);
 
@@ -212,75 +166,60 @@
             renderLogs();
         }
 
-        function renderChart(data) {
-            const ctx = document.getElementById('myChart').getContext('2d');
-            if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.map(d => "A"+d.id),
-                    datasets: [{ data: data.map(d => d.diff), backgroundColor: data.map(d => d.color) }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: false, datalabels: { anchor: 'end', align: 'top' } } }
-            });
-        }
-
         function renderControls(data) {
             const list = document.getElementById('controlsList');
             list.innerHTML = "";
             data.forEach(d => {
-                list.innerHTML += `
-                    <div class="control-row ${d.status}">
-                        <div style="flex:1"><b>A${d.id}</b><br><small>${d.pkg}</small></div>
-                        <div style="flex:1; font-weight:bold">${d.diff.toLocaleString()}</div>
-                        <button class="btn btn-wplan" ${d.ist < 215500 ? 'disabled' : ''} onclick="doReset('${d.id}')">WP</button>
-                        <button class="btn btn-minus" onclick="doChange('${d.id}', -1)">-</button>
-                        <span style="width:20px; text-align:center"><b>${d.count}</b></span>
-                        <button class="btn btn-plus" ${d.diff > 5000 ? 'disabled' : ''} onclick="doChange('${d.id}', 1)">+</button>
-                    </div>`;
+                list.innerHTML += `<div class="control-row ${d.status}">
+                    <div style="flex:1"><b>A${d.id}</b><br><small>${d.pkg}</small></div>
+                    <div style="flex:1"><b>${d.diff.toLocaleString()}</b></div>
+                    <button class="btn btn-wplan" ${d.ist < 215500 ? 'disabled' : ''} onclick="wpReset('${d.id}')">WP</button>
+                    <button class="btn btn-minus" onclick="change('${d.id}', -1)">-</button>
+                    <span style="width:20px;text-align:center">${d.count}</span>
+                    <button class="btn btn-plus" ${d.diff > 5000 ? 'disabled' : ''} onclick="change('${d.id}', 1)">+</button>
+                </div>`;
             });
         }
 
-        function doChange(id, delta) {
-            if (confirm(`A${id} Zähler ändern?`)) {
-                state.extraCycles[id] = Math.max(0, (state.extraCycles[id] || 0) + delta);
-                saveAction(id, `Zähler ${delta > 0 ? '+1' : '-1'}`, state.extraCycles[id]);
-            }
+        function change(id, delta) {
+            state.extraCycles[id] = Math.max(0, (state.extraCycles[id]||0) + delta);
+            saveLog(id, `Zähler ${delta>0?'+1':'-1'}`, state.extraCycles[id]);
         }
 
-        function doReset(id) {
-            if (prompt("Admin-Passwort:") === "23091861") {
-                state.agieOffsets[id] = (state.agieOffsets[id] || 0) + RESET_VAL;
+        function wpReset(id) {
+            if(prompt("Admin-Code:") === "23091861") {
+                state.agieOffsets[id] = (state.agieOffsets[id]||0) + 216000;
                 state.extraCycles[id] = 0;
-                saveAction(id, "WP-Reset", 0);
+                saveLog(id, "WP-Reset", 0);
             }
         }
 
-        function saveAction(id, event, val) {
+        function saveLog(id, ev, val) {
             if(!state.history) state.history = [];
-            state.history.push({
-                Zeitstempel: new Date().toLocaleString('de-DE'),
-                Agie: id, Ereignis: event, Benutzer: auth.currentUser.displayName, Zaehlerstand: val
-            });
+            state.history.push({ Zeitstempel: new Date().toLocaleString(), Agie: id, Ereignis: ev, Benutzer: auth.currentUser.displayName, Zaehlerstand: val });
             db.ref('maintenanceState').update(state);
         }
 
         function renderLogs() {
-            const body = document.getElementById('tracking-body');
-            body.innerHTML = "";
-            const logs = state.history ? [...state.history].reverse().slice(0, 10) : [];
-            logs.forEach(l => {
-                body.innerHTML += `<tr><td>${l.Zeitstempel}</td><td>A${l.Agie}</td><td>${l.Ereignis}</td><td>${l.Benutzer}</td><td>${l.Zaehlerstand || 0}</td></tr>`;
+            const b = document.getElementById('tracking-body'); b.innerHTML = "";
+            (state.history || []).slice(-10).reverse().forEach(l => {
+                b.innerHTML += `<tr><td>${l.Zeitstempel}</td><td>A${l.Agie}</td><td>${l.Ereignis}</td><td>${l.Benutzer}</td></tr>`;
             });
         }
 
+        function renderChart(data) {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            if(myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'bar', data: { labels: data.map(d=>"A"+d.id), datasets:[{data: data.map(d=>d.diff), backgroundColor: data.map(d=>d.color)}] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: false, datalabels: { anchor:'end', align:'top' } } }
+            });
+        }
         function exportHistory() {
-            let csv = "\uFEFFZeit;Agie;Ereignis;Benutzer;Zaehler\n";
+            let csv = "\uFEFFZeit;Agie;Ereignis;User;Stand\n";
             state.history.forEach(r => csv += `${r.Zeitstempel};${r.Agie};${r.Ereignis};${r.Benutzer};${r.Zaehlerstand}\n`);
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-            link.download = "Wartung_Log.csv";
-            link.click();
+            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+            link.download = "Log.csv"; link.click();
         }
     </script>
 </body>
