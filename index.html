@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch Dashboard v6</title>
+    <title>Agie Wartung - Bosch Stable v6.2</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -12,26 +12,38 @@
         :root { --bosch-red: #d50000; --bosch-blue: #003a6c; --bosch-light-blue: #00b5e2; --bosch-green: #008a4f; --bosch-gray: #eff1f2; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bosch-gray); margin: 0; padding: 0; overflow-x: hidden; }
         .top-bar { height: 8px; width: 100%; background: linear-gradient(90deg, var(--bosch-red) 25%, var(--bosch-blue) 25%, var(--bosch-blue) 50%, var(--bosch-light-blue) 50%, var(--bosch-light-blue) 75%, var(--bosch-green) 75%); position: fixed; top: 0; z-index: 3000; }
+        
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bosch-gray); z-index: 2000; display: flex; justify-content: center; align-items: center; }
         .auth-box { background: white; padding: 40px; border-top: 6px solid var(--bosch-red); width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .auth-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #bfc0c2; }
+        .auth-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #bfc0c2; box-sizing: border-box; }
+
         .header { background: white; padding: 15px 30px; margin-top: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
         .bosch-brand { color: var(--bosch-red); font-weight: 900; font-size: 26px; }
         .bosch-brand span { color: var(--bosch-blue); }
+
         .action-bar { padding: 10px 30px; display: flex; gap: 15px; }
         .nav-btn { padding: 10px 20px; cursor: pointer; border: 1px solid #bfc0c2; background: white; font-weight: bold; color: var(--bosch-blue); }
+
         .main-layout { display: none; padding: 10px 30px; gap: 20px; box-sizing: border-box; width: 100%; height: calc(100vh - 150px); }
         .content-area { flex: 3; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+        
         .chart-container { background: white; padding: 20px; border-top: 4px solid var(--bosch-blue); flex: 2; min-height: 400px; }
         .log-container { background: white; padding: 20px; border-top: 4px solid #ccc; flex: 1; overflow-y: auto; }
+
         .sidebar { flex: 1; background: white; padding: 20px; border-top: 4px solid var(--bosch-light-blue); overflow-y: auto; max-width: 450px; }
+        
         .control-row { display: flex; align-items: center; padding: 12px; margin-bottom: 10px; border: 1px solid #dee2e6; border-left: 8px solid #ccc; gap: 10px; }
         .status-red { border-left-color: var(--bosch-red); background: #fce8e8; }
         .status-yellow { border-left-color: #ffcf00; background: #fff9e6; }
         .status-green { border-left-color: var(--bosch-green); background: #e6f4ed; }
-        .status-overdue { border-left-color: #b00000; background: #ffdce0; }
+        .status-overdue { border-left-color: #b00000; background: #ffdce0; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+
         .btn { width: 36px; height: 36px; cursor: pointer; border: none; color: white; font-weight: bold; }
-        .btn-plus { background: var(--bosch-light-blue); } .btn-minus { background: var(--bosch-blue); } .btn-wplan { background: var(--bosch-red); font-size: 10px; }
+        .btn-plus { background: var(--bosch-light-blue); }
+        .btn-minus { background: var(--bosch-blue); }
+        .btn-wplan { background: var(--bosch-red); font-size: 10px; }
+        
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th { text-align: left; padding: 10px; border-bottom: 2px solid #eee; }
         td { padding: 10px; border-bottom: 1px solid #f8f8f8; }
@@ -42,7 +54,7 @@
     <div id="auth-overlay">
         <div class="auth-box" id="login-form">
             <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-            <p>Wartungs-Dashboard Login</p>
+            <p>Login Dashboard</p>
             <input type="email" id="login-email" placeholder="E-Mail">
             <input type="password" id="login-pass" placeholder="Passwort">
             <button class="nav-btn" style="width:100%; background:var(--bosch-blue); color:white" onclick="handleLogin()">Anmelden</button>
@@ -54,7 +66,7 @@
             <input type="email" id="reg-email" placeholder="E-Mail">
             <input type="password" id="reg-pass" placeholder="Passwort">
             <input type="password" id="reg-invite" placeholder="Sicherheitsschlüssel">
-            <button class="nav-btn" style="width:100%; background:var(--bosch-light-blue); color:white" onclick="handleRegister()">Account erstellen</button>
+            <button class="nav-btn" style="width:100%; background:var(--bosch-light-blue); color:white" onclick="handleRegister()">Erstellen</button>
             <p onclick="showRegister(false)" style="cursor:pointer; text-decoration:underline; font-size:12px; margin-top:15px">Zurück</p>
         </div>
     </div>
@@ -64,13 +76,14 @@
         <div class="bosch-brand">BOSCH<span> AGIE</span></div>
         <div style="text-align: right;">
             <span id="user-display" style="font-weight:bold; color:var(--bosch-blue)"></span><br>
-            <small style="color:#666">Version 23.01.2026-V6 | Stable</small>
+            <small style="color:#666">Version 23.01.2026-V6.2 | Stable</small>
             <button onclick="handleLogout()" style="margin-left:15px; cursor:pointer">Logout</button>
         </div>
     </div>
 
     <div class="action-bar">
         <button class="nav-btn" style="background: var(--bosch-blue); color:white" onclick="document.getElementById('fileInput').click()">📥 JSON Laden</button>
+        <button class="nav-btn" onclick="exportHistory()">CSV Export</button>
     </div>
     <input type="file" id="fileInput" style="display:none" accept=".json">
 
@@ -78,8 +91,11 @@
         <div class="content-area">
             <div class="chart-container"><canvas id="myChart"></canvas></div>
             <div class="log-container">
-                <div style="font-weight:bold; margin-bottom:10px; color:var(--bosch-blue)">🕒 LOG</div>
-                <table id="log-table"><thead><tr><th>Zeit</th><th>Agie</th><th>Ereignis</th><th>User</th></tr></thead><tbody id="tracking-body"></tbody></table>
+                <div style="font-weight:bold; margin-bottom:10px; color:var(--bosch-blue)">🕒 ÄNDERUNGS-LOG</div>
+                <table>
+                    <thead><tr><th>Zeit</th><th>Agie</th><th>Aktion</th><th>User</th></tr></thead>
+                    <tbody id="tracking-body"></tbody>
+                </table>
             </div>
         </div>
         <div class="sidebar" id="controlsList"></div>
@@ -108,7 +124,7 @@
             if(i !== "bosch2026") return alert("Code falsch!");
             auth.createUserWithEmailAndPassword(e, p).then(res => res.user.updateProfile({displayName: n})).then(() => location.reload());
         }
-        function handleLogin() { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert("Login fehlgeschlagen")); }
+        function handleLogin() { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert("Login-Fehler")); }
         function handleLogout() { auth.signOut().then(() => location.reload()); }
 
         auth.onAuthStateChanged(user => {
@@ -129,18 +145,16 @@
             }
         });
 
-        // FIX FÜR CHROMBOOK FILE READER
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const file = this.files[0];
-            if(!file) return; // Verhindert den Blob-Fehler
-            
+            if(!file) return;
             const reader = new FileReader();
             reader.onload = function(ev) { 
                 try {
                     const data = JSON.parse(ev.target.result);
                     state.cloudRawData = data;
                     db.ref('maintenanceState').update(state).then(() => alert("Synchronisiert!"));
-                } catch(err) { alert("JSON Formatfehler!"); }
+                } catch(err) { alert("Fehler in JSON Datei!"); }
             };
             reader.readAsText(file);
         });
@@ -158,12 +172,7 @@
                 else if(diff < 500) { s = "status-red"; c = "#d50000"; } 
                 else if(diff < 5000) { s = "status-yellow"; c = "#ffcf00"; }
                 
-                // FIX: Fallback falls Paketliste nicht greifbar
-                let pkgName = "P1";
-                if (packages && packages.length > 0) {
-                    pkgName = packages[Math.abs(count) % packages.length];
-                }
-
+                let pkgName = packages[Math.abs(count) % packages.length] || "P1";
                 return { id, diff, ist, count, status: s, color: c, pkg: pkgName };
             }).filter(x => x !== null).sort((a,b) => a.diff - b.diff);
 
@@ -174,12 +183,17 @@
 
         function renderControls(data) {
             const list = document.getElementById('controlsList');
-            list.innerHTML = `<h3 style="margin:0 0 15px 0; color:var(--bosch-blue)">Steuerung</h3>`;
+            list.innerHTML = `<h3 style="margin:0 0 15px 0; color:var(--bosch-blue)">Maschinen Steuerung</h3>`;
             data.forEach(d => {
+                // SPERRE WIEDER AKTIV: WP-Reset erst ab 215.500 Hüben
+                const canReset = d.ist >= 215500;
+                
                 list.innerHTML += `<div class="control-row ${d.status}">
                     <div style="flex:1"><b>A${d.id}</b><br><small>${d.pkg}</small></div>
                     <div style="flex:1; font-weight:bold; font-size:18px">${d.diff.toLocaleString()}</div>
-                    <button class="btn btn-wplan" ${d.ist < 215500 ? 'disabled' : ''} onclick="wpReset('${d.id}')">WP</button>
+                    <button class="btn btn-wplan" 
+                        ${canReset ? '' : 'style="opacity:0.2; cursor:not-allowed" disabled'} 
+                        onclick="wpReset('${d.id}')">WP</button>
                     <button class="btn btn-minus" onclick="change('${d.id}', -1)">-</button>
                     <span style="width:25px; text-align:center"><b>${d.count}</b></span>
                     <button class="btn btn-plus" ${d.diff > 5000 ? 'disabled' : ''} onclick="change('${d.id}', 1)">+</button>
@@ -193,10 +207,10 @@
         }
 
         function wpReset(id) {
-            if(prompt("Admin-Code:") === "23091861") {
+            if(prompt("Admin-Code für 216k Reset:") === "23091861") {
                 state.agieOffsets[id] = (state.agieOffsets[id]||0) + 216000;
                 state.extraCycles[id] = 0;
-                saveLog(id, "WP-Reset", 0);
+                saveLog(id, "WP-RESET (216k)", 0);
             }
         }
 
@@ -208,7 +222,7 @@
 
         function renderLogs() {
             const b = document.getElementById('tracking-body'); b.innerHTML = "";
-            (state.history || []).slice(-15).reverse().forEach(l => {
+            (state.history || []).slice(-20).reverse().forEach(l => {
                 b.innerHTML += `<tr><td>${l.Zeitstempel}</td><td>A${l.Agie}</td><td>${l.Ereignis}</td><td>${l.Benutzer}</td></tr>`;
             });
         }
@@ -225,6 +239,15 @@
                     plugins: { legend: false, datalabels: { anchor:'end', align:'top', font: { weight: 'bold' } } } 
                 }
             });
+        }
+
+        function exportHistory() {
+            let csv = "\uFEFFZeit;Agie;Ereignis;User;Stand\n";
+            (state.history||[]).forEach(r => csv += `${r.Zeitstempel};${r.Agie};${r.Ereignis};${r.Benutzer};${r.Zaehlerstand}\n`);
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+            link.download = "Agie_Wartung_Log.csv";
+            link.click();
         }
     </script>
 </body>
