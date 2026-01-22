@@ -8,46 +8,51 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
-        /* Behalte dein bisheriges CSS hier bei oder nutze dieses kompakte Setup */
         .top-bar { height: 8px; width: 100%; background: linear-gradient(90deg, #d50000, #003a6c, #00b5e2); position: fixed; top: 0; left: 0; z-index: 1000; }
+        .bottom-bar { height: 8px; width: 100%; background: linear-gradient(90deg, #00b5e2, #003a6c, #d50000); position: fixed; bottom: 0; left: 0; z-index: 1000; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f9; margin: 0; padding: 25px; padding-top: 40px; display: flex; flex-direction: column; align-items: center; }
-        .main-layout { display: flex; width: 98%; max-width: 1600px; gap: 20px; }
-        .chart-container { flex: 3; background: white; padding: 20px; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .sidebar { flex: 1.5; background: #fff; padding: 15px; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-height: 80vh; overflow-y: auto; }
-        .control-row { display: flex; align-items: center; padding: 10px; margin-bottom: 5px; border-radius: 5px; border-left: 5px solid #eee; background: #f9f9f9; }
-        .status-red { border-left-color: #d50000; background: #ffcccc; }
-        .btn { width: 30px; height: 30px; cursor: pointer; border: none; color: white; border-radius: 3px; font-weight: bold; }
+        .main-layout { display: flex; width: 98%; max-width: 1600px; gap: 20px; margin-top: 15px; }
+        .chart-container { flex: 3; background: white; padding: 20px; border-top: 4px solid #003a6c; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 4px; }
+        .sidebar { flex: 1.8; background: #fff; padding: 15px; height: 80vh; overflow-y: auto; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .control-row { display: flex; align-items: center; padding: 12px; margin-bottom: 5px; border-radius: 5px; gap: 10px; border: 1px solid #eee; }
+        .status-red { background-color: #ffcccc !important; border-left: 5px solid #d50000; }
+        .btn { width: 30px; height: 30px; cursor: pointer; border: none; font-weight: bold; color: white; border-radius: 3px; }
         .btn-plus { background: #00b5e2; } .btn-minus { background: #003a6c; } .btn-wplan { background: #d50000; font-size: 10px; }
+        #sync-status { font-size: 0.5em; vertical-align: middle; margin-left: 10px; }
     </style>
 </head>
 <body>
     <div class="top-bar"></div>
-    <h2>Agie Wartung <span id="sync-status" style="font-size: 0.5em; color: green;">● Online</span></h2>
+    <h2>Stückzahlabhängige Wartung <span id="sync-status">● Verbinde...</span></h2>
     
-    <div style="margin-bottom: 15px;">
-        <button onclick="document.getElementById('fileInput').click()">JSON laden</button>
-        <button onclick="exportHistory()">Historie CSV</button>
+    <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+        <button onclick="document.getElementById('fileInput').click()" style="padding: 8px; cursor: pointer;">JSON laden</button>
+        <button onclick="exportHistory()" style="padding: 8px; cursor: pointer;">Historie Export (CSV)</button>
     </div>
     <input type="file" id="fileInput" accept=".json" style="display:none">
 
     <div class="main-layout">
         <div class="chart-container"><canvas id="myChart"></canvas></div>
-        <div class="sidebar" id="controlsList"></div>
+        <div class="sidebar">
+            <h3 style="color:#003a6c; border-bottom: 2px solid #00b5e2;">WARTUNGS-PRIORITÄT</h3>
+            <div id="controlsList"></div>
+        </div>
     </div>
+    <div class="bottom-bar"></div>
 
     <script>
-        // --- DEINE FIREBASE KONFIGURATION HIER EINTRAGEN ---
+        // --- DEINE FIREBASE KONFIGURATION ---
         const firebaseConfig = {
-            apiKey: "DEIN_API_KEY",
-            authDomain: "DEIN_PROJEKT.firebaseapp.com",
-            databaseURL: "https://DEIN_PROJEKT-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "DEIN_PROJEKT",
-            storageBucket: "DEIN_PROJEKT.appspot.com",
-            messagingSenderId: "DEINE_ID",
-            appId: "DEINE_APP_ID"
+            apiKey: "AIzaSyD6xGCtU-felOyO_BRsFnVlB4yhC46FgYg",
+            authDomain: "bosch-agie-wartung.firebaseapp.com",
+            databaseURL: "https://bosch-agie-wartung-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "bosch-agie-wartung",
+            storageBucket: "bosch-agie-wartung.firebasestorage.app",
+            messagingSenderId: "211606405555",
+            appId: "1:211606405555:web:cc2475ca47804086a3cbc6"
         };
-        // --------------------------------------------------
 
+        // Firebase initialisieren
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         Chart.register(ChartDataLabels);
@@ -57,7 +62,7 @@
         const INTERVALL = 16000, RESET_VAL = 216000, PW_UNDO = "87430";
         const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
 
-        // Daten aus Cloud laden
+        // Live-Daten aus der Cloud empfangen
         db.ref('maintenanceState').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -67,18 +72,33 @@
                     history: data.history || [],
                     triggeredNegatives: data.triggeredNegatives || {}
                 };
+                document.getElementById('sync-status').innerText = "● Cloud Synchronisiert";
+                document.getElementById('sync-status').style.color = "green";
                 updateDisplay();
+            } else {
+                document.getElementById('sync-status').innerText = "● Cloud leer (Initialisierung)";
+                document.getElementById('sync-status').style.color = "orange";
             }
+        }, (error) => {
+            console.error(error);
+            document.getElementById('sync-status').innerText = "● Fehler: Keine Berechtigung";
+            document.getElementById('sync-status').style.color = "red";
         });
 
         async function saveToCloud() {
-            document.getElementById('sync-status').style.color = 'orange';
+            document.getElementById('sync-status').style.color = "orange";
             await db.ref('maintenanceState').set(state);
-            document.getElementById('sync-status').style.color = 'green';
+            document.getElementById('sync-status').style.color = "green";
         }
 
         function logEvent(agie, eventType, count, totalStueck) {
-            state.history.push({ Zeitstempel: new Date().toLocaleString('de-DE'), Agie: agie, Ereignis: eventType, Zaehler: count, Gesamtstueck: totalStueck });
+            state.history.push({ 
+                Zeitstempel: new Date().toLocaleString('de-DE'), 
+                Agie: agie, 
+                Ereignis: eventType, 
+                Zaehler: count, 
+                Gesamtstueck: totalStueck 
+            });
             saveToCloud();
         }
 
@@ -111,10 +131,10 @@
                 row.className = `control-row ${d.diff < 500 ? 'status-red' : ''}`;
                 row.innerHTML = `
                     <div style="flex:1"><strong>A${d.id}</strong><br><small>${d.packageName}</small></div>
-                    <div style="flex:1; font-weight:bold">${d.diff.toLocaleString()}</div>
+                    <div style="flex:1; font-weight:bold">${d.diff.toLocaleString('de-DE')}</div>
                     <button class="btn btn-wplan" onclick="wPlanReset('${d.id}')">WP</button>
                     <button class="btn btn-minus" onclick="changeCount('${d.id}', -1, ${d.rawIst})">-</button>
-                    <span style="width:20px; text-align:center">${d.count}</span>
+                    <span style="width:25px; text-align:center">${d.count}</span>
                     <button class="btn btn-plus" onclick="changeCount('${d.id}', 1, ${d.rawIst})">+</button>
                 `;
                 container.appendChild(row);
@@ -123,11 +143,11 @@
 
         function changeCount(id, delta, rawIst) {
             state.extraCycles[id] = Math.max(0, (state.extraCycles[id] || 0) + delta);
-            logEvent(id, delta > 0 ? "Wartung +" : "Korrektur -", state.extraCycles[id], rawIst);
+            logEvent(id, delta > 0 ? "Wartung bestätigt" : "Korrektur", state.extraCycles[id], rawIst);
         }
 
         function wPlanReset(id) {
-            if(confirm("Großer Wartungsplan-Reset?")) {
+            if(confirm(`Wartungsplan-Reset für Agie ${id}?`)) {
                 state.agieOffsets[id] = (state.agieOffsets[id] || 0) + RESET_VAL;
                 state.extraCycles[id] = 0;
                 logEvent(id, "WPlan Reset", 0, "N/A");
@@ -141,9 +161,18 @@
                 type: 'bar',
                 data: {
                     labels: data.map(d => d.label),
-                    datasets: [{ data: data.map(d => d.diff), backgroundColor: '#003a6c' }]
+                    datasets: [{ 
+                        data: data.map(d => d.diff), 
+                        backgroundColor: '#003a6c' 
+                    }]
                 },
-                options: { plugins: { legend: false, datalabels: { anchor: 'end', align: 'top', rotation: -90 } } }
+                options: { 
+                    responsive: true,
+                    plugins: { 
+                        legend: false, 
+                        datalabels: { anchor: 'end', align: 'top', rotation: -90, formatter: v => v.toLocaleString('de-DE') } 
+                    } 
+                }
             });
         }
 
@@ -158,7 +187,7 @@
             state.history.forEach(r => csv += `${r.Zeitstempel};${r.Agie};${r.Ereignis};${r.Zaehler};${r.Gesamtstueck}\n`);
             const link = document.createElement("a");
             link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-            link.download = "Wartung_Cloud.csv";
+            link.download = `Historie_${new Date().toLocaleDateString()}.csv`;
             link.click();
         }
     </script>
