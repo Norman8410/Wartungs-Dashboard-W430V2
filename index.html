@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V7.2</title>
+    <title>Agie Wartung - Bosch V7.4</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -40,21 +40,11 @@
         .auth-box input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #bfc0c2; box-sizing: border-box; }
 
         .main-layout { display: none; flex: 1; padding: 10px 30px 20px 30px; gap: 20px; box-sizing: border-box; overflow: hidden; }
-        
         .content-area { flex: 3; display: flex; flex-direction: column; gap: 15px; min-width: 0; overflow: hidden; }
         
-        /* DIAGRAMM VERGRÖSSERT */
-        .chart-container { 
-            background: white; padding: 15px; border-top: 4px solid var(--bosch-blue); 
-            flex: 5; /* Höherer Wert für mehr Platz */
-            min-height: 0; position: relative;
-        }
+        .chart-container { background: white; padding: 15px; border-top: 4px solid var(--bosch-blue); flex: 5; min-height: 0; position: relative; }
         
-        /* KOMPAKTE LETZTE AKTIVITÄT */
-        .last-activity-box {
-            background: white; padding: 15px; border-top: 4px solid #ccc;
-            color: var(--bosch-blue); flex-shrink: 0;
-        }
+        .last-activity-box { background: white; padding: 15px; border-top: 4px solid #ccc; color: var(--bosch-blue); flex-shrink: 0; }
         .last-activity-title { font-size: 10px; text-transform: uppercase; color: #666; font-weight: bold; margin-bottom: 3px; }
         .last-activity-content { font-size: 15px; font-weight: bold; }
 
@@ -103,7 +93,7 @@
         <div class="bosch-brand">BOSCH<span> AGIE</span></div>
         <div style="text-align: right;">
             <span id="user-display" style="font-weight:bold; color:var(--bosch-blue)"></span><br>
-            <small style="color:#666">Version 7.2 | Diagram Focus</small>
+            <small style="color:#666">Version 7.4 | Terminologie Update</small>
             <button onclick="handleLogout()" style="margin-left:15px; border:none; background:none; text-decoration:underline; cursor:pointer; color:#666">Logout</button>
         </div>
     </div>
@@ -119,7 +109,6 @@
             <div class="chart-container">
                 <canvas id="myChart"></canvas>
             </div>
-            
             <div class="last-activity-box" id="last-activity">
                 <div class="last-activity-title">LETZTE ÄNDERUNG</div>
                 <div class="last-activity-content">Warte auf Daten...</div>
@@ -149,13 +138,13 @@
         let myChart, rawData = [], state = { extraCycles: {}, agieOffsets: {}, history: [], cloudRawData: [] };
         const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
 
+        function handleLogin() { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert(e.message)); }
         function showRegister(s) { document.getElementById('login-form').style.display = s?'none':'block'; document.getElementById('register-form').style.display = s?'block':'none'; }
         function handleRegister() {
             const n = document.getElementById('reg-name').value, e = document.getElementById('reg-email').value, p = document.getElementById('reg-pass').value, i = document.getElementById('reg-invite').value;
             if(i !== "bosch2026") return alert("Code falsch!");
             auth.createUserWithEmailAndPassword(e, p).then(res => res.user.updateProfile({displayName: n})).then(() => location.reload());
         }
-        function handleLogin() { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert(e.message)); }
         function handleLogout() { auth.signOut().then(() => location.reload()); }
 
         auth.onAuthStateChanged(user => {
@@ -221,13 +210,13 @@
                 <div class="control-row ${d.status}">
                     <div style="flex:1">
                         <span style="font-size:16px; font-weight:900">A${d.id}</span>
-                        <div style="font-size:12px; color:#444; font-weight:bold; white-space:nowrap">${d.pkg}</div>
+                        <div style="font-size:12px; color:#444; font-weight:bold">${d.pkg}</div>
                     </div>
                     <div style="flex:1; font-weight:bold; font-size:18px">${d.diff.toLocaleString()}</div>
-                    <button class="btn btn-wplan" ${canReset ? '' : 'disabled'} onclick="wpReset('${d.id}')">WP</button>
+                    <button class="btn btn-wplan" ${canReset ? '' : 'disabled title="Gesperrt bis 215.500 Stück"'} onclick="wpReset('${d.id}')">WP</button>
                     <button class="btn btn-minus" onclick="change('${d.id}', -1)">-</button>
                     <span style="width:30px; text-align:center; font-weight:bold">${d.count}</span>
-                    <button class="btn btn-plus" ${canPlus ? '' : 'disabled'} onclick="change('${d.id}', 1)">+</button>
+                    <button class="btn btn-plus" ${canPlus ? '' : 'disabled title="Gesperrt bis < 5.000 Rest-Stückzahl"'} onclick="change('${d.id}', 1)">+</button>
                 </div>`;
             });
         }
@@ -253,14 +242,11 @@
 
         function renderLastActivity() {
             const history = state.history || [];
-            const lastBox = document.getElementById('last-activity');
             if(history.length > 0) {
                 const latest = history[history.length - 1];
-                lastBox.innerHTML = `
+                document.getElementById('last-activity').innerHTML = `
                     <div class="last-activity-title">LETZTE ÄNDERUNG (${latest.Zeitstempel})</div>
-                    <div class="last-activity-content">
-                        <span style="color:var(--bosch-red)">Agie A${latest.Agie}</span>: ${latest.Ereignis} durch ${latest.Benutzer}
-                    </div>`;
+                    <div class="last-activity-content"><span style="color:var(--bosch-red)">Agie A${latest.Agie}</span>: ${latest.Ereignis} durch ${latest.Benutzer}</div>`;
             }
         }
 
@@ -269,12 +255,36 @@
             if(myChart) myChart.destroy();
             myChart = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: data.map(d=>"A"+d.id), datasets:[{data: data.map(d=>d.diff), backgroundColor: data.map(d=>d.color), borderRadius:3}] },
+                data: { 
+                    labels: data.map(d=>"A"+d.id), 
+                    datasets:[{
+                        data: data.map(d=>d.diff), 
+                        backgroundColor: data.map(d=>d.color), 
+                        borderRadius:3,
+                        istValues: data.map(d=>d.ist)
+                    }] 
+                },
                 options: { 
                     responsive: true, maintainAspectRatio: false,
                     layout: { padding: { top: 30, bottom: 10 } },
                     scales: { y: { beginAtZero: true } },
-                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: { weight: 'bold', size: 11 } } } 
+                    plugins: { 
+                        legend: { display: false }, 
+                        datalabels: { anchor: 'end', align: 'top', font: { weight: 'bold', size: 11 } },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) { return 'Station: ' + context[0].label; },
+                                label: function(context) {
+                                    const rest = context.parsed.y;
+                                    const ist = context.dataset.istValues[context.dataIndex];
+                                    return [
+                                        'Rest bis Wartung: ' + rest.toLocaleString() + ' Stück',
+                                        'Stückzahl seit WP-Wechsel: ' + ist.toLocaleString()
+                                    ];
+                                }
+                            }
+                        }
+                    } 
                 }
             });
         }
