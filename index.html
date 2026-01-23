@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V7.1</title>
+    <title>Agie Wartung - Bosch V7.2</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -10,21 +10,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
     <style>
-        /* --- DESIGN REGELWERK --- */
         :root { 
-            --bosch-red: #d50000; 
-            --bosch-blue: #003a6c; 
-            --bosch-light-blue: #00b5e2; 
-            --bosch-green: #008a4f; 
-            --bosch-gray: #eff1f2; 
+            --bosch-red: #d50000; --bosch-blue: #003a6c; --bosch-light-blue: #00b5e2; 
+            --bosch-green: #008a4f; --bosch-gray: #eff1f2; 
         }
         
         body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            background: var(--bosch-gray); 
-            margin: 0; padding: 0; 
-            height: 100vh; 
-            display: flex; flex-direction: column; overflow: hidden; 
+            font-family: 'Segoe UI', sans-serif; background: var(--bosch-gray); 
+            margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; 
         }
 
         .top-bar { 
@@ -33,77 +26,40 @@
         }
 
         .header { 
-            background: white; padding: 12px 30px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
-            display: flex; justify-content: space-between; align-items: center; 
-            flex-shrink: 0;
+            background: white; padding: 12px 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
         }
         .bosch-brand { color: var(--bosch-red); font-weight: 900; font-size: 24px; }
         .bosch-brand span { color: var(--bosch-blue); }
 
-        .action-bar { 
-            padding: 10px 30px; display: flex; gap: 15px; align-items: center;
-            flex-shrink: 0;
-        }
-        .nav-btn { 
-            padding: 8px 16px; cursor: pointer; border: 1px solid #bfc0c2; 
-            background: white; font-weight: bold; color: var(--bosch-blue); border-radius: 2px;
-        }
+        .action-bar { padding: 10px 30px; display: flex; gap: 15px; align-items: center; flex-shrink: 0; }
+        .nav-btn { padding: 8px 16px; cursor: pointer; border: 1px solid #bfc0c2; background: white; font-weight: bold; color: var(--bosch-blue); border-radius: 2px; }
 
-        /* Login Screen */
-        #auth-overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: var(--bosch-gray); z-index: 2000; 
-            display: flex; justify-content: center; align-items: center; 
-        }
-        .auth-box { 
-            background: white; padding: 40px; border-top: 6px solid var(--bosch-red); 
-            width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-        }
+        #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bosch-gray); z-index: 2000; display: flex; justify-content: center; align-items: center; }
+        .auth-box { background: white; padding: 40px; border-top: 6px solid var(--bosch-red); width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .auth-box input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #bfc0c2; box-sizing: border-box; }
 
-        /* Haupt-Layout */
-        .main-layout { 
-            display: none; flex: 1; padding: 10px 30px 20px 30px; 
-            gap: 20px; box-sizing: border-box; overflow: hidden; 
-        }
+        .main-layout { display: none; flex: 1; padding: 10px 30px 20px 30px; gap: 20px; box-sizing: border-box; overflow: hidden; }
         
         .content-area { flex: 3; display: flex; flex-direction: column; gap: 15px; min-width: 0; overflow: hidden; }
         
+        /* DIAGRAMM VERGRÖSSERT */
         .chart-container { 
             background: white; padding: 15px; border-top: 4px solid var(--bosch-blue); 
-            flex: 2; min-height: 250px; position: relative;
+            flex: 5; /* Höherer Wert für mehr Platz */
+            min-height: 0; position: relative;
         }
         
-        /* LOG BEREICH NEU */
-        .log-container { 
-            background: white; padding: 0; border-top: 4px solid #ccc; 
-            flex: 1.5; display: flex; flex-direction: column; overflow: hidden;
-        }
-        
-        /* Das Highlight-Feld für die letzte Änderung */
+        /* KOMPAKTE LETZTE AKTIVITÄT */
         .last-activity-box {
-            background: #eef7fa; padding: 15px;
-            border-bottom: 1px solid #ddd;
-            color: var(--bosch-blue);
+            background: white; padding: 15px; border-top: 4px solid #ccc;
+            color: var(--bosch-blue); flex-shrink: 0;
         }
-        .last-activity-title { font-size: 11px; text-transform: uppercase; color: #666; font-weight: bold; margin-bottom: 5px; }
-        .last-activity-content { font-size: 16px; font-weight: bold; }
+        .last-activity-title { font-size: 10px; text-transform: uppercase; color: #666; font-weight: bold; margin-bottom: 3px; }
+        .last-activity-content { font-size: 15px; font-weight: bold; }
 
-        .log-table-wrapper { overflow-y: auto; flex: 1; }
-
-        /* Sidebar */
-        .sidebar { 
-            flex: 1.2; background: white; padding: 0; 
-            border-top: 4px solid var(--bosch-light-blue); 
-            overflow-y: auto; max-width: 500px; 
-        }
-
-        .control-row { 
-            display: flex; align-items: center; padding: 10px 15px; 
-            border-bottom: 1px solid #dee2e6; border-left: 8px solid #ccc; 
-            gap: 10px; background: white;
-        }
+        .sidebar { flex: 1.2; background: white; padding: 0; border-top: 4px solid var(--bosch-light-blue); overflow-y: auto; max-width: 500px; }
+        .control-row { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #dee2e6; border-left: 8px solid #ccc; gap: 10px; }
         
         .status-red { border-left-color: var(--bosch-red); background: #fff5f5; }
         .status-yellow { border-left-color: #ffcf00; background: #fffef0; }
@@ -111,24 +67,13 @@
         .status-overdue { border-left-color: #b00000; background: #ffe0e0; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
 
-        .btn { 
-            width: 38px; height: 38px; cursor: pointer; border: none; 
-            color: white; font-weight: bold; border-radius: 3px; 
-        }
-        .btn:disabled { opacity: 0.15; cursor: not-allowed; filter: grayscale(100%); }
+        .btn { width: 38px; height: 38px; cursor: pointer; border: none; color: white; font-weight: bold; border-radius: 3px; }
+        .btn:disabled { opacity: 0.15; cursor: not-allowed; }
         .btn-plus { background: var(--bosch-light-blue); font-size: 18px; }
         .btn-minus { background: var(--bosch-blue); font-size: 18px; }
         .btn-wplan { background: var(--bosch-red); font-size: 11px; width: 42px; }
 
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { text-align: left; padding: 8px 15px; background: #f8f9fa; position: sticky; top: 0; border-bottom: 1px solid #ddd; }
-        td { padding: 6px 15px; border-bottom: 1px solid #f0f0f0; color: #555; }
-        
-        .sidebar-header {
-            position: sticky; top: 0; background: white; z-index: 10;
-            padding: 15px; border-bottom: 1px solid #eee; margin: 0;
-            color: var(--bosch-blue);
-        }
+        .sidebar-header { position: sticky; top: 0; background: white; z-index: 10; padding: 15px; border-bottom: 1px solid #eee; margin: 0; color: var(--bosch-blue); }
     </style>
 </head>
 <body>
@@ -144,7 +89,6 @@
         </div>
         <div class="auth-box" id="register-form" style="display:none">
             <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-            <p>Registrierung</p>
             <input type="text" id="reg-name" placeholder="Name">
             <input type="email" id="reg-email" placeholder="E-Mail">
             <input type="password" id="reg-pass" placeholder="Passwort">
@@ -155,12 +99,11 @@
     </div>
 
     <div class="top-bar"></div>
-    
     <div class="header">
         <div class="bosch-brand">BOSCH<span> AGIE</span></div>
         <div style="text-align: right;">
             <span id="user-display" style="font-weight:bold; color:var(--bosch-blue)"></span><br>
-            <small style="color:#666">Version 7.1 | History Fix</small>
+            <small style="color:#666">Version 7.2 | Diagram Focus</small>
             <button onclick="handleLogout()" style="margin-left:15px; border:none; background:none; text-decoration:underline; cursor:pointer; color:#666">Logout</button>
         </div>
     </div>
@@ -177,17 +120,9 @@
                 <canvas id="myChart"></canvas>
             </div>
             
-            <div class="log-container">
-                <div class="last-activity-box" id="last-activity">
-                    <div class="last-activity-title">LETZTE AKTIVITÄT</div>
-                    <div class="last-activity-content">Noch keine Daten...</div>
-                </div>
-                <div class="log-table-wrapper">
-                    <table>
-                        <thead><tr><th>Zeit</th><th>Agie</th><th>Aktion</th><th>User</th></tr></thead>
-                        <tbody id="tracking-body"></tbody>
-                    </table>
-                </div>
+            <div class="last-activity-box" id="last-activity">
+                <div class="last-activity-title">LETZTE ÄNDERUNG</div>
+                <div class="last-activity-content">Warte auf Daten...</div>
             </div>
         </div>
 
@@ -211,18 +146,14 @@
         const auth = firebase.auth(), db = firebase.database();
         Chart.register(ChartDataLabels);
 
-        let myChart;
-        let rawData = [];
-        let state = { extraCycles: {}, agieOffsets: {}, history: [], cloudRawData: [] };
-        
-        // Vollständige Paket-Liste für Quickinfo
+        let myChart, rawData = [], state = { extraCycles: {}, agieOffsets: {}, history: [], cloudRawData: [] };
         const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
 
         function showRegister(s) { document.getElementById('login-form').style.display = s?'none':'block'; document.getElementById('register-form').style.display = s?'block':'none'; }
         function handleRegister() {
             const n = document.getElementById('reg-name').value, e = document.getElementById('reg-email').value, p = document.getElementById('reg-pass').value, i = document.getElementById('reg-invite').value;
             if(i !== "bosch2026") return alert("Code falsch!");
-            auth.createUserWithEmailAndPassword(e, p).then(res => res.user.updateProfile({displayName: n})).then(() => location.reload()).catch(e => alert(e.message));
+            auth.createUserWithEmailAndPassword(e, p).then(res => res.user.updateProfile({displayName: n})).then(() => location.reload());
         }
         function handleLogin() { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert(e.message)); }
         function handleLogout() { auth.signOut().then(() => location.reload()); }
@@ -253,8 +184,8 @@
                 try {
                     const data = JSON.parse(ev.target.result);
                     state.cloudRawData = data;
-                    db.ref('maintenanceState').update(state).then(() => alert("✅ Synchronisiert!"));
-                } catch(err) { alert("❌ JSON Fehler!"); }
+                    db.ref('maintenanceState').update(state).then(() => alert("✅ Daten geladen!"));
+                } catch(err) { alert("JSON Fehler!"); }
             };
             reader.readAsText(file);
         });
@@ -267,19 +198,17 @@
                 const ist = Number(item.Parts || 0) - (state.agieOffsets[id] || 0);
                 const count = state.extraCycles[id] || 0;
                 const diff = (16000 + (count * 16000)) - ist;
-                
                 let s = "status-green", c = "#008a4f";
                 if(diff < 0) { s = "status-overdue"; c = "#b00000"; } 
                 else if(diff < 500) { s = "status-red"; c = "#d50000"; } 
                 else if(diff < 5000) { s = "status-yellow"; c = "#ffcf00"; }
-                
                 let pkgName = packages[Math.abs(count) % packages.length] || "P1";
                 return { id, diff, ist, count, status: s, color: c, pkg: pkgName };
             }).filter(x => x !== null).sort((a,b) => a.diff - b.diff);
 
             renderChart(processed);
             renderControls(processed);
-            renderLogs();
+            renderLastActivity();
         }
 
         function renderControls(data) {
@@ -288,23 +217,17 @@
             data.forEach(d => {
                 const canReset = d.ist >= 215500;
                 const canPlus = d.diff <= 5000;
-                
-                // Quickinfo (Paket) wird jetzt besser dargestellt
                 list.innerHTML += `
                 <div class="control-row ${d.status}">
-                    <div style="flex:1; min-width:80px">
+                    <div style="flex:1">
                         <span style="font-size:16px; font-weight:900">A${d.id}</span>
-                        <div style="font-size:12px; color:#555; margin-top:2px; font-weight:bold; white-space:nowrap">${d.pkg}</div>
+                        <div style="font-size:12px; color:#444; font-weight:bold; white-space:nowrap">${d.pkg}</div>
                     </div>
-                    
-                    <div style="flex:1; font-weight:bold; font-size:18px; color:#333">
-                        ${d.diff.toLocaleString()}
-                    </div>
-                    
-                    <button class="btn btn-wplan" ${canReset ? '' : 'disabled title="Gesperrt bis 215.500 Hübe"'} onclick="wpReset('${d.id}')">WP</button>
+                    <div style="flex:1; font-weight:bold; font-size:18px">${d.diff.toLocaleString()}</div>
+                    <button class="btn btn-wplan" ${canReset ? '' : 'disabled'} onclick="wpReset('${d.id}')">WP</button>
                     <button class="btn btn-minus" onclick="change('${d.id}', -1)">-</button>
                     <span style="width:30px; text-align:center; font-weight:bold">${d.count}</span>
-                    <button class="btn btn-plus" ${canPlus ? '' : 'disabled title="Gesperrt bis < 5000 Rest"'} onclick="change('${d.id}', 1)">+</button>
+                    <button class="btn btn-plus" ${canPlus ? '' : 'disabled'} onclick="change('${d.id}', 1)">+</button>
                 </div>`;
             });
         }
@@ -315,8 +238,7 @@
         }
 
         function wpReset(id) {
-            const code = prompt("Admin-Code (216k Reset):");
-            if(code === "23091861") {
+            if(prompt("Admin-Code (216k Reset):") === "23091861") {
                 state.agieOffsets[id] = (state.agieOffsets[id]||0) + 216000;
                 state.extraCycles[id] = 0;
                 saveLog(id, "WP-RESET", 0);
@@ -325,36 +247,21 @@
 
         function saveLog(id, ev, val) {
             if(!state.history) state.history = [];
-            state.history.push({ 
-                Zeitstempel: new Date().toLocaleString('de-DE'), 
-                Agie: id, Ereignis: ev, Benutzer: auth.currentUser.displayName, Zaehlerstand: val 
-            });
+            state.history.push({ Zeitstempel: new Date().toLocaleString('de-DE'), Agie: id, Ereignis: ev, Benutzer: auth.currentUser.displayName, Zaehlerstand: val });
             db.ref('maintenanceState').update(state);
         }
 
-        function renderLogs() {
-            // 1. Letzte Änderung prominent anzeigen
+        function renderLastActivity() {
             const history = state.history || [];
             const lastBox = document.getElementById('last-activity');
-            
             if(history.length > 0) {
                 const latest = history[history.length - 1];
                 lastBox.innerHTML = `
-                    <div class="last-activity-title">LETZTE AKTIVITÄT (${latest.Zeitstempel})</div>
+                    <div class="last-activity-title">LETZTE ÄNDERUNG (${latest.Zeitstempel})</div>
                     <div class="last-activity-content">
-                        <span style="color:var(--bosch-red)">A${latest.Agie}</span>: 
-                        ${latest.Ereignis} 
-                        <span style="font-weight:normal; font-size:14px; color:#666">durch ${latest.Benutzer}</span>
+                        <span style="color:var(--bosch-red)">Agie A${latest.Agie}</span>: ${latest.Ereignis} durch ${latest.Benutzer}
                     </div>`;
-            } else {
-                lastBox.innerHTML = `<div class="last-activity-content" style="color:#999">Keine Daten vorhanden</div>`;
             }
-
-            // 2. Tabelle füllen (umgekehrt sortiert)
-            const b = document.getElementById('tracking-body'); b.innerHTML = "";
-            history.slice().reverse().forEach(l => {
-                b.innerHTML += `<tr><td>${l.Zeitstempel}</td><td>A${l.Agie}</td><td>${l.Ereignis}</td><td>${l.Benutzer}</td></tr>`;
-            });
         }
 
         function renderChart(data) {
@@ -362,12 +269,12 @@
             if(myChart) myChart.destroy();
             myChart = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: data.map(d=>"A"+d.id), datasets:[{data: data.map(d=>d.diff), backgroundColor: data.map(d=>d.color), borderRadius:4}] },
+                data: { labels: data.map(d=>"A"+d.id), datasets:[{data: data.map(d=>d.diff), backgroundColor: data.map(d=>d.color), borderRadius:3}] },
                 options: { 
                     responsive: true, maintainAspectRatio: false,
-                    layout: { padding: { top: 25 } },
+                    layout: { padding: { top: 30, bottom: 10 } },
                     scales: { y: { beginAtZero: true } },
-                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: { weight: 'bold' } } } 
+                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: { weight: 'bold', size: 11 } } } 
                 }
             });
         }
@@ -377,7 +284,7 @@
             (state.history||[]).forEach(r => csv += `${r.Zeitstempel};${r.Agie};${r.Ereignis};${r.Benutzer};${r.Zaehlerstand}\n`);
             const link = document.createElement("a");
             link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-            link.download = "Agie_Log.csv";
+            link.download = "Agie_Export.csv";
             link.click();
         }
     </script>
