@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V9.8.9 Smart Sync</title>
+    <title>Agie Wartung - Bosch V9.8.9 Smart Sync + PPT</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -57,11 +57,69 @@
         .help-section h4 { margin: 0 0 5px 0; color: var(--bosch-blue); border-left: 4px solid var(--bosch-red); padding-left: 10px; font-size: 16px; }
         .help-section p { margin: 0; font-size: 13.5px; line-height: 1.5; color: #444; }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #666; font-weight: bold; }
+
+        /* NEUE PRÄSENTATIONS-STYLES */
+        #btnShowPresentation { 
+            position: absolute; bottom: 20px; right: 20px; z-index: 100; 
+            display: none; background: var(--bosch-green); color: white; 
+            border: none; padding: 12px 20px; border-radius: 4px; 
+            cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .ppt-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .ppt-slide { background: white; width: 85%; height: 75%; max-width: 1100px; padding: 50px; border-radius: 4px; display: none; flex-direction: column; position: relative; border-top: 10px solid var(--bosch-red); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .ppt-slide.active { display: flex; }
+        .ppt-header { color: var(--bosch-blue); font-size: 36px; font-weight: 900; border-bottom: 2px solid #eee; margin-bottom: 30px; padding-bottom: 10px; }
+        .ppt-content { font-size: 22px; line-height: 1.6; color: #333; }
+        .ppt-footer { margin-top: auto; display: flex; justify-content: space-between; font-weight: bold; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
+        .ppt-nav { position: absolute; bottom: 30px; display: flex; gap: 15px; }
+        .ppt-btn { background: var(--bosch-blue); color: white; border: none; padding: 10px 30px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .ppt-close { position: absolute; top: 20px; right: 25px; background: none; border: none; font-size: 45px; cursor: pointer; color: #ccc; }
     </style>
 </head>
 <body>
 
     <div id="toastContainer" class="toast-container"></div>
+
+    <div id="pptOverlay" class="ppt-overlay">
+        <button class="ppt-close" onclick="closePPT()">&times;</button>
+        <div class="ppt-slide active" id="ps1">
+            <div class="ppt-header">01. Berechnungs-Logik</div>
+            <div class="ppt-content">
+                <ul>
+                    <li><b>Ist-Wert:</b> Rohdaten minus WP-Offset.</li>
+                    <li><b>Soll-Trigger:</b> Alle 16.000 Einheiten (Intervall).</li>
+                    <li><b>Farben:</b> Grün (>5k), Gelb (<5k), Rot (<500), Schwarz (Verzug).</li>
+                </ul>
+            </div>
+            <div class="ppt-footer"><span>BOSCH AGIE SYSTEM</span><span>1 / 3</span></div>
+        </div>
+        <div class="ppt-slide" id="ps2">
+            <div class="ppt-header">02. Smart-Sync (+)</div>
+            <div class="ppt-content">
+                <p>Das System erkennt automatisch:</p>
+                <ul>
+                    <li><b>Synchronisierung:</b> Bei positivem Rest springt der Zähler exakt auf das nächste Paket (+16k exakt).</li>
+                    <li><b>Addition:</b> Bei Verzug (negativ) werden stumpf +16.000 addiert, der Verzug bleibt bestehen.</li>
+                </ul>
+            </div>
+            <div class="ppt-footer"><span>BOSCH AGIE SYSTEM</span><span>2 / 3</span></div>
+        </div>
+        <div class="ppt-slide" id="ps3">
+            <div class="ppt-header">03. Sicherheit</div>
+            <div class="ppt-content">
+                <ul>
+                    <li><b>Auto-Logout:</b> Sperre nach 20 Sek. Inaktivität.</li>
+                    <li><b>Einladungscode:</b> bosch2026 für neue User.</li>
+                    <li><b>Reset:</b> WP-Reset nur mit Admin-PW möglich.</li>
+                </ul>
+            </div>
+            <div class="ppt-footer"><span>BOSCH AGIE SYSTEM</span><span>3 / 3</span></div>
+        </div>
+        <div class="ppt-nav">
+            <button class="ppt-btn" onclick="changeSlide(-1)">ZURÜCK</button>
+            <button class="ppt-btn" onclick="changeSlide(1)">WEITER</button>
+        </div>
+    </div>
 
     <div id="authModal" class="modal-overlay">
         <div class="modal-content" style="max-width:350px; text-align:center">
@@ -115,7 +173,10 @@
 
     <div class="main-layout">
         <div class="content-area">
-            <div class="chart-container"><canvas id="mainChart"></canvas></div>
+            <div class="chart-container">
+                <canvas id="mainChart"></canvas>
+                <button id="btnShowPresentation" onclick="openPPT()">📊 System-Hilfe</button>
+            </div>
             <div class="activity-bar"><span id="lastActionText">Keine Aktivitäten.</span><span id="userStatus" style="font-weight:bold; color:var(--bosch-blue)">Lade...</span></div>
         </div>
         <div class="sidebar">
@@ -140,7 +201,7 @@
         Chart.register(ChartDataLabels);
 
         let localState = { cloudRawData: [], extraCycles: {}, agieOffsets: {}, history: [] };
-        let chartInstance = null, logoutTimer = null, countdownInterval = null, remainingSeconds = 20;
+        let chartInstance = null, logoutTimer = null, countdownInterval = null, remainingSeconds = 20, currentSlide = 1;
         const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
 
         function resetLogoutTimer() {
@@ -178,15 +239,18 @@
 
         auth.onAuthStateChanged(user => {
             const btn = document.getElementById('btnLogin'), stat = document.getElementById('userStatus');
+            const pptBtn = document.getElementById('btnShowPresentation');
             if (user) {
                 btn.innerHTML = "🔓 Angemeldet"; btn.classList.add('btn-active');
                 btn.onclick = () => { if(confirm("Abmelden?")) auth.signOut(); };
                 stat.innerText = "Änderungsmodus aktiv"; resetLogoutTimer();
+                if(pptBtn) pptBtn.style.display = 'block';
             } else {
                 btn.innerHTML = "🔑 Anmelden"; btn.classList.remove('btn-active');
                 btn.onclick = () => document.getElementById('authModal').style.display = 'flex';
                 stat.innerText = "👁 Nur Lesemodus";
                 document.getElementById('logoutDisplay').style.display = 'none';
+                if(pptBtn) pptBtn.style.display = 'none';
             }
             refreshUI();
         });
@@ -252,7 +316,6 @@
 
             if (type === 'PLUS') {
                 if (!confirm(`Wartung für A${id} buchen?`)) return;
-                // Logik: Wenn positiv -> Sync auf nächstes Paket. Wenn negativ -> stumpf +1 Zyklus.
                 let newCycles = (metrics.diff > 0) ? Math.floor(metrics.ist / 16000) + 1 : (localState.extraCycles[id] || 0) + 1;
                 updates[`maintenanceState/extraCycles/${id}`] = newCycles;
                 pushHistory(id, `Wartung (+16k ${metrics.diff > 0 ? 'Sync' : 'Add'})`, user, updates);
@@ -306,6 +369,13 @@
             el.className = 'toast show'; el.innerHTML = msg; c.appendChild(el);
             setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
         }
+
+        /* PPT LOGIC */
+        function openPPT() { document.getElementById('pptOverlay').style.display = "flex"; currentSlide = 1; updateSlides(); }
+        function closePPT() { document.getElementById('pptOverlay').style.display = "none"; }
+        function changeSlide(n) { currentSlide += n; if(currentSlide<1) currentSlide=1; if(currentSlide>3) currentSlide=3; updateSlides(); }
+        function updateSlides() { document.querySelectorAll('.ppt-slide').forEach((s, i) => s.classList.toggle('active', (i+1) === currentSlide)); }
+
         window.onload = () => setTimeout(() => document.getElementById('helpModal').style.display='flex', 800);
     </script>
 </body>
