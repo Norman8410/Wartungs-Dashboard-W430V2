@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V9.8.4.1 Timer & Help Fix</title>
+    <title>Agie Wartung - Bosch V9.8.5 History-Fix</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -89,34 +89,28 @@
     <div id="helpModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="document.getElementById('helpModal').style.display='none'">&times;</span>
-            <h2 style="color:var(--bosch-blue); border-bottom: 2px solid var(--bosch-red); padding-bottom: 10px; margin-top:0;">🛠 Handbuch & System-Logik (V9.8.4.1)</h2>
+            <h2 style="color:var(--bosch-blue); border-bottom: 2px solid var(--bosch-red); padding-bottom: 10px; margin-top:0;">🛠 Handbuch & System-Logik (V9.8.5)</h2>
             
             <div class="help-section">
                 <h4>📋 Digitaler Wartungsplan</h4>
-                <p>Dieses Tool visualisiert die Wartungsintervalle der Agie-Maschinen. Ein grüner Balken zeigt ausreichend Puffer, gelb mahnt zur Vorbereitung und rot signalisiert eine fällige Wartung. Dunkelrot bedeutet: Wartung überfällig.</p>
+                <p>Dieses Tool visualisiert die Wartungsintervalle der Agie-Maschinen. Ein grüner Balken zeigt ausreichend Puffer, gelb mahnt zur Vorbereitung und rot signalisiert eine fällige Wartung.</p>
             </div>
 
             <div class="help-section">
                 <h4>🔄 Zähler & Wartungs-Intervalle</h4>
-                <p><b>Button (+):</b> Bestätigt die Durchführung einer Standardwartung. Der Zielwert wird um +16.000 Stück erhöht.<br>
-                <b>Button (-):</b> Korrigiert eine Fehlbuchung (-16.000).<br>
-                <b>Button (WP):</b> Vollständiger Wartungsplan-Reset (216.000 Stück). Erfordert ein spezielles Admin-Passwort aus der Cloud.</p>
+                <p><b>Button (+):</b> Bestätigt die Durchführung einer Standardwartung (+16.000).<br>
+                <b>Button (WP):</b> Vollständiger Wartungsplan-Reset (216.000 Stück). Erfordert ein spezielles Admin-Passwort.</p>
             </div>
 
             <div class="help-section">
                 <h4>🔐 Cloud-Sicherheit & Automatik</h4>
-                <p><b>Auto-Logout:</b> Um unbefugte Änderungen an offenen Terminals zu verhindern, wird jeder Benutzer nach <b>20 Sekunden Inaktivität</b> automatisch abgemeldet.<br>
-                <b>Einladungscode:</b> Zur Registrierung neuer Konten wird ein gültiger Einladungscode benötigt. Dieser wird zentral durch die Administratoren vergeben.</p>
-            </div>
-
-            <div class="help-section">
-                <h4>📊 Daten & Export</h4>
-                <p>Die Basis-Stückzahlen werden täglich per <b>JSON-Import</b> aktualisiert. Alle manuellen Buchungen (+/-) werden in Echtzeit in der Cloud gespeichert. Über den <b>Export-Button</b> (passwortgeschützt) kann das vollständige Aktivitäts-Logbuch als CSV für Excel heruntergeladen werden.</p>
+                <p><b>Auto-Logout:</b> Jeder Benutzer wird nach <b>20 Sekunden Inaktivität</b> automatisch abgemeldet. Ein Live-Countdown erscheint oben rechts.<br>
+                <b>Einladungscode:</b> Zur Registrierung neuer Konten wird ein gültiger Einladungscode benötigt.</p>
             </div>
 
             <div class="help-section" style="background: #f9f9f9; padding: 10px; border-radius: 4px;">
                 <h4>🛡 Datenschutzhinweis</h4>
-                <p>Namen von Mitarbeitern werden nur im internen Logbuch zur Nachvollziehbarkeit gespeichert, jedoch niemals öffentlich auf dem Dashboard angezeigt.</p>
+                <p>Benutzernamen werden nur im internen Logbuch gespeichert und nicht öffentlich auf dem Dashboard angezeigt.</p>
             </div>
 
             <button class="nav-btn btn-primary" style="width:100%; justify-content:center; margin-top:10px" onclick="document.getElementById('helpModal').style.display='none'">Verstanden & Schließen</button>
@@ -191,24 +185,19 @@
                 remainingSeconds = 20;
                 document.getElementById('logoutDisplay').style.display = 'block';
                 updateTimerUI();
-
                 countdownInterval = setInterval(() => {
                     remainingSeconds--;
                     updateTimerUI();
                     if (remainingSeconds <= 0) clearInterval(countdownInterval);
                 }, 1000);
-
-                logoutTimer = setTimeout(() => {
-                    auth.signOut();
-                    showToast("Sitzung beendet (Inaktivität)", "error");
-                }, 20000);
+                logoutTimer = setTimeout(() => auth.signOut(), 20000);
             }
         }
 
         function updateTimerUI() {
             const el = document.getElementById('secondsLeft');
             const box = document.getElementById('logoutDisplay');
-            el.innerText = remainingSeconds;
+            if(el) el.innerText = remainingSeconds;
             if (remainingSeconds <= 5) box.classList.add('timer-warning');
             else box.classList.remove('timer-warning');
         }
@@ -220,15 +209,17 @@
         db.ref('.info/connected').on('value', snap => {
             const connected = snap.val();
             document.getElementById('connDot').className = connected ? 'status-dot online' : 'status-dot offline';
-            document.getElementById('connText').innerText = connected ? 'Online V9.8.4.1' : 'Offline';
+            document.getElementById('connText').innerText = connected ? 'Online V9.8.5' : 'Offline';
         });
 
+        // --- HISTORY & STATE LISTENER ---
         db.ref('maintenanceState').on('value', snap => {
             const val = snap.val();
             if (val) {
                 localState.cloudRawData = val.cloudRawData || [];
                 localState.extraCycles = val.extraCycles || {};
                 localState.agieOffsets = val.agieOffsets || {};
+                // Sicherstellen, dass die History korrekt als Array verarbeitet wird
                 localState.history = val.history ? Object.values(val.history) : []; 
                 refreshUI();
             }
@@ -281,9 +272,19 @@
             const data = calculateMetrics();
             renderChart(data);
             renderList(data);
-            if (localState.history.length > 0) {
-                const last = localState.history.sort((a,b) => new Date(b.ISO) - new Date(a.ISO))[0];
-                if(last) document.getElementById('lastActionText').innerHTML = `Letzte Änderung: <b>A${last.Agie}</b> (${last.Ereignis}) am ${last.Zeit.split(',')[0]}`;
+            
+            // --- FIX: LETZTE AKTIVITÄT FINDEN ---
+            if (localState.history && localState.history.length > 0) {
+                const sortedHistory = [...localState.history].sort((a, b) => {
+                    return new Date(b.ISO || 0) - new Date(a.ISO || 0);
+                });
+                const last = sortedHistory[0];
+                if (last) {
+                    document.getElementById('lastActionText').innerHTML = 
+                        `Letzte Änderung: <b>A${last.Agie}</b> (${last.Ereignis}) am ${last.Zeit.split(',')[0]}`;
+                }
+            } else {
+                document.getElementById('lastActionText').innerText = "Keine Aktivitäten verzeichnet.";
             }
         }
 
@@ -317,8 +318,6 @@
                 chartInstance.data.labels = labels;
                 chartInstance.data.datasets[0].data = data.map(d => d.diff);
                 chartInstance.data.datasets[0].backgroundColor = data.map(d => d.color);
-                chartInstance.data.datasets[0].pkgInfo = data.map(d => d.pkgName); 
-                chartInstance.data.datasets[0].totalInfo = data.map(d => d.ist);
                 chartInstance.update('none'); 
             } else {
                 chartInstance = new Chart(ctx, {
@@ -328,9 +327,7 @@
                         datasets: [{
                             data: data.map(d => d.diff),
                             backgroundColor: data.map(d => d.color),
-                            borderRadius: 4, barPercentage: 0.7,
-                            pkgInfo: data.map(d => d.pkgName),
-                            totalInfo: data.map(d => d.ist)
+                            borderRadius: 4, barPercentage: 0.7
                         }]
                     },
                     options: {
@@ -340,11 +337,6 @@
                             datalabels: {
                                 anchor: 'end', align: 'top', color: '#333', font: { weight: 'bold' }, rotation: -90, 
                                 formatter: (val) => val.toLocaleString()
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: (ctx) => ['Paket: ' + ctx.dataset.pkgInfo[ctx.dataIndex], 'Rest: ' + ctx.parsed.y.toLocaleString(), 'Gesamt: ' + ctx.dataset.totalInfo[ctx.dataIndex].toLocaleString()]
-                                }
                             }
                         },
                         scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
@@ -358,10 +350,12 @@
             resetLogoutTimer();
             const user = auth.currentUser.displayName || auth.currentUser.email;
             const updates = {};
+            
             if (type === 'PLUS' || type === 'MINUS') {
                 if (type === 'PLUS' && !confirm(`Wartung (+16.000) für A${id} buchen?`)) return;
                 const delta = type === 'PLUS' ? 1 : -1;
-                updates[`maintenanceState/extraCycles/${id}`] = Math.max(0, (localState.extraCycles[id] || 0) + delta);
+                const currentCycles = localState.extraCycles[id] || 0;
+                updates[`maintenanceState/extraCycles/${id}`] = Math.max(0, currentCycles + delta);
                 pushHistory(id, `Zähler ${delta>0?'+1':'-1'}`, user, updates);
             } else if (type === 'RESET') {
                 const pass = prompt(`Admin-Passwort für A${id} Reset:`);
@@ -371,13 +365,20 @@
                     updates[`maintenanceState/agieOffsets/${id}`] = (localState.agieOffsets[id] || 0) + 216000;
                     updates[`maintenanceState/extraCycles/${id}`] = 0;
                     pushHistory(id, "WP-RESET", user, updates);
-                } else showToast("Passwort falsch!", "error");
+                } else alert("Passwort falsch!");
             }
         }
 
         function pushHistory(id, event, user, updatesObj) {
             const key = db.ref('maintenanceState/history').push().key;
-            updatesObj[`maintenanceState/history/${key}`] = { Agie: id, Ereignis: event, Benutzer: user, Zeit: new Date().toLocaleString('de-DE'), ISO: new Date().toISOString() };
+            const now = new Date();
+            updatesObj[`maintenanceState/history/${key}`] = { 
+                Agie: id, 
+                Ereignis: event, 
+                Benutzer: user, 
+                Zeit: now.toLocaleString('de-DE'), 
+                ISO: now.toISOString() 
+            };
             db.ref().update(updatesObj).then(() => showToast("✅ Gespeichert")).catch(e => showToast(e.message, "error"));
         }
 
@@ -409,7 +410,7 @@
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
                 link.download = `Wartungslog.csv`; link.click();
-            } else showToast("Passwort falsch!", "error");
+            } else alert("Passwort falsch!");
         }
 
         function triggerImport() { if(auth.currentUser) document.getElementById('fileInput').click(); else showToast("Anmelden!", "error"); }
