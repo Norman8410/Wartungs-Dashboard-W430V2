@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V9.1</title>
+    <title>Agie Wartung - Bosch V9.2</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -176,7 +176,7 @@
         db.ref('.info/connected').on('value', snap => {
             const connected = snap.val();
             document.getElementById('connDot').className = connected ? 'status-dot online' : 'status-dot offline';
-            document.getElementById('connText').innerText = connected ? 'Online V9.1' : 'Offline';
+            document.getElementById('connText').innerText = connected ? 'Online V9.2' : 'Offline';
         });
 
         db.ref('maintenanceState').on('value', snap => {
@@ -284,13 +284,15 @@
             const labels = data.map(d => "A" + d.id);
             const values = data.map(d => d.diff);
             const colors = data.map(d => d.color);
-            const pkgNames = data.map(d => d.pkgName); // Für Tooltip
+            const pkgNames = data.map(d => d.pkgName); 
+            const totalCounts = data.map(d => d.ist); // HIER: Gesamtzähler für Tooltip
 
             if (chartInstance) {
                 chartInstance.data.labels = labels;
                 chartInstance.data.datasets[0].data = values;
                 chartInstance.data.datasets[0].backgroundColor = colors;
-                chartInstance.data.datasets[0].pkgInfo = pkgNames; // Update pkg info
+                chartInstance.data.datasets[0].pkgInfo = pkgNames; 
+                chartInstance.data.datasets[0].totalInfo = totalCounts; // Update total info
                 chartInstance.update('none'); 
             } else {
                 chartInstance = new Chart(ctx, {
@@ -302,7 +304,8 @@
                             backgroundColor: colors,
                             borderRadius: 4,
                             barPercentage: 0.7,
-                            pkgInfo: pkgNames // Benutzerdefiniertes Feld
+                            pkgInfo: pkgNames, // Benutzerdefiniertes Feld
+                            totalInfo: totalCounts // Benutzerdefiniertes Feld für Gesamtzähler
                         }]
                     },
                     options: {
@@ -314,17 +317,19 @@
                             datalabels: {
                                 anchor: 'end', align: 'top',
                                 color: '#333', font: { weight: 'bold' },
-                                rotation: -90, // HIER: 90 Grad gedreht (wie V8.6)
-                                formatter: (val) => val.toLocaleString() // HIER: Volle Zahl (wie V8.6)
+                                rotation: -90, 
+                                formatter: (val) => val.toLocaleString()
                             },
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
-                                        // HIER: Alter Tooltip Stil (wie V8.6)
+                                        // HIER: Neue Tooltip Logik V9.2
                                         const pkg = context.dataset.pkgInfo[context.dataIndex];
+                                        const total = context.dataset.totalInfo[context.dataIndex];
                                         return [
                                             'Paket: ' + pkg, 
-                                            'Rest: ' + context.parsed.y.toLocaleString()
+                                            'Reststückzahl bis Wartung: ' + context.parsed.y.toLocaleString(),
+                                            'Gesamtstückzahl seit Wartungsplan wechsel: ' + total.toLocaleString()
                                         ];
                                     }
                                 }
@@ -421,7 +426,7 @@
             link.click();
         }
 
-        // AUTO POPUP (Wie V8.6)
+        // AUTO POPUP
         window.onload = () => setTimeout(() => document.getElementById('helpModal').style.display='flex', 800);
     </script>
 </body>
