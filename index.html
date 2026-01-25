@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V9.8.7 Full Features</title>
+    <title>Agie Wartung - Bosch V9.8.8 Tooltip-Update</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -89,7 +89,7 @@
     <div id="helpModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="document.getElementById('helpModal').style.display='none'">&times;</span>
-            <h2 style="color:var(--bosch-blue); border-bottom: 2px solid var(--bosch-red); padding-bottom: 10px; margin-top:0;">🛠 Handbuch & System-Logik (V9.8.7)</h2>
+            <h2 style="color:var(--bosch-blue); border-bottom: 2px solid var(--bosch-red); padding-bottom: 10px; margin-top:0;">🛠 Handbuch & System-Logik (V9.8.8)</h2>
             
             <div class="help-section">
                 <h4>📋 Digitaler Wartungsplan</h4>
@@ -214,7 +214,7 @@
         db.ref('.info/connected').on('value', snap => {
             const connected = snap.val();
             document.getElementById('connDot').className = connected ? 'status-dot online' : 'status-dot offline';
-            document.getElementById('connText').innerText = connected ? 'Online V9.8.7' : 'Offline';
+            document.getElementById('connText').innerText = connected ? 'Online V9.8.8' : 'Offline';
         });
 
         db.ref('maintenanceState').on('value', snap => {
@@ -338,8 +338,8 @@
                                 callbacks: {
                                     label: (ctx) => [
                                         'Paket: ' + ctx.dataset.pkgInfo[ctx.dataIndex], 
-                                        'Rest: ' + ctx.parsed.y.toLocaleString(), 
-                                        'Gesamt: ' + ctx.dataset.totalInfo[ctx.dataIndex].toLocaleString()
+                                        'Offene Stückzahl bis Wartung: ' + ctx.parsed.y.toLocaleString(), 
+                                        'Stückzahl seit Wartungsplanwechsel: ' + ctx.dataset.totalInfo[ctx.dataIndex].toLocaleString()
                                     ]
                                 }
                             }
