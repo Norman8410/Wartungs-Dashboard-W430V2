@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V9.8 Cloud-Secure (Auto-Logout)</title>
+    <title>Agie Wartung - Bosch V9.8.1 Complete</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -51,7 +51,7 @@
         .btn-wp { background: var(--bosch-red); font-size: 11px; width: 40px; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
-        .modal-content { background: white; padding: 30px; max-width: 600px; width: 90%; border-top: 8px solid var(--bosch-red); box-shadow: 0 20px 50px rgba(0,0,0,0.3); animation: slideIn 0.3s ease-out; position: relative; }
+        .modal-content { background: white; padding: 25px; max-width: 650px; width: 90%; border-top: 8px solid var(--bosch-red); box-shadow: 0 20px 50px rgba(0,0,0,0.3); animation: slideIn 0.3s ease-out; position: relative; max-height: 85vh; overflow-y: auto; }
         @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
         .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 4000; display: flex; flex-direction: column; gap: 10px; }
@@ -59,9 +59,9 @@
         .toast.show { opacity: 1; }
         .toast.error { border-left-color: var(--bosch-red); }
 
-        .help-section { margin-bottom: 15px; text-align: left; }
-        .help-section h4 { margin: 0 0 5px 0; color: var(--bosch-blue); border-left: 3px solid var(--bosch-red); padding-left: 8px; }
-        .help-section p { margin: 0; font-size: 14px; line-height: 1.4; color: #333; }
+        .help-section { margin-bottom: 18px; text-align: left; }
+        .help-section h4 { margin: 0 0 5px 0; color: var(--bosch-blue); border-left: 4px solid var(--bosch-red); padding-left: 10px; font-size: 16px; }
+        .help-section p { margin: 0; font-size: 13.5px; line-height: 1.5; color: #444; }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #666; font-weight: bold; }
     </style>
 </head>
@@ -83,20 +83,37 @@
     <div id="helpModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="document.getElementById('helpModal').style.display='none'">&times;</span>
-            <h2 style="color:var(--bosch-blue); border-bottom: 2px solid var(--bosch-red); padding-bottom: 10px;">🛠 Bedienungsanleitung & Info</h2>
+            <h2 style="color:var(--bosch-blue); border-bottom: 2px solid var(--bosch-red); padding-bottom: 10px; margin-top:0;">🛠 Handbuch & System-Logik (V9.8.1)</h2>
+            
             <div class="help-section">
                 <h4>📋 Digitaler Wartungsplan</h4>
-                <p>Nach einer Validierungsphase soll dieses System den händischen Plan dauerhaft ersetzen.</p>
+                <p>Dieses Tool visualisiert die Wartungsintervalle der Agie-Maschinen. Ein grüner Balken zeigt ausreichend Puffer, gelb mahnt zur Vorbereitung und rot signalisiert eine fällige Wartung. Dunkelrot bedeutet: Wartung überfällig.</p>
             </div>
+
             <div class="help-section">
-                <h4>🔄 Automatischer Logout</h4>
-                <p>Aus Sicherheitsgründen wird die Sitzung nach <b>20 Sekunden Inaktivität</b> automatisch beendet.</p>
+                <h4>🔄 Zähler & Wartungs-Intervalle</h4>
+                <p><b>Button (+):</b> Bestätigt die Durchführung einer Standardwartung. Der Zielwert wird um +16.000 Stück erhöht.<br>
+                <b>Button (-):</b> Korrigiert eine Fehlbuchung (-16.000).<br>
+                <b>Button (WP):</b> Vollständiger Wartungsplan-Reset (216.000 Stück). Erfordert ein spezielles Admin-Passwort aus der Cloud.</p>
             </div>
+
             <div class="help-section">
-                <h4>⚠️ Sicherheit & Zähler</h4>
-                <p><b>Button (+):</b> Bucht einen Zyklus (+16.000).<br><b>Button (WP):</b> Setzt den Plan (216.000) nach Passwort-Prüfung zurück.</p>
+                <h4>🔐 Cloud-Sicherheit & Automatik</h4>
+                <p><b>Auto-Logout:</b> Um unbefugte Änderungen an offenen Terminals zu verhindern, wird jeder Benutzer nach <b>20 Sekunden Inaktivität</b> automatisch abgemeldet.<br>
+                <b>Einladungscode:</b> Zur Registrierung neuer Konten wird der Einladungscode <i>bosch2026</i> benötigt (Live-Abgleich mit der Datenbank).</p>
             </div>
-            <button class="nav-btn btn-primary" style="width:100%; justify-content:center; margin-top:10px" onclick="document.getElementById('helpModal').style.display='none'">Verstanden</button>
+
+            <div class="help-section">
+                <h4>📊 Daten & Export</h4>
+                <p>Die Basis-Stückzahlen werden täglich per <b>JSON-Import</b> aktualisiert. Alle manuellen Buchungen (+/-) werden in Echtzeit in der Cloud gespeichert. Über den <b>Export-Button</b> (passwortgeschützt) kann das vollständige Aktivitäts-Logbuch als CSV für Excel heruntergeladen werden.</p>
+            </div>
+
+            <div class="help-section" style="background: #f9f9f9; padding: 10px; border-radius: 4px;">
+                <h4>🛡 Datenschutzhinweis</h4>
+                <p>Namen von Mitarbeitern werden nur im internen Logbuch zur Nachvollziehbarkeit gespeichert, jedoch niemals öffentlich auf dem Dashboard angezeigt.</p>
+            </div>
+
+            <button class="nav-btn btn-primary" style="width:100%; justify-content:center; margin-top:10px" onclick="document.getElementById('helpModal').style.display='none'">Verstanden & Schließen</button>
         </div>
     </div>
 
@@ -154,18 +171,16 @@
         let logoutTimer = null;
         const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
 
-        // --- AUTO LOGOUT LOGIK ---
         function resetLogoutTimer() {
             if (logoutTimer) clearTimeout(logoutTimer);
             if (auth.currentUser) {
                 logoutTimer = setTimeout(() => {
                     auth.signOut();
                     showToast("Sitzung beendet (Inaktivität)", "error");
-                }, 20000); // 20 Sekunden
+                }, 20000);
             }
         }
 
-        // Überwachung von Nutzeraktivitäten
         ['mousedown', 'mousemove', 'keypress', 'touchstart'].forEach(evt => {
             window.addEventListener(evt, resetLogoutTimer, false);
         });
@@ -173,7 +188,7 @@
         db.ref('.info/connected').on('value', snap => {
             const connected = snap.val();
             document.getElementById('connDot').className = connected ? 'status-dot online' : 'status-dot offline';
-            document.getElementById('connText').innerText = connected ? 'Online V9.8' : 'Offline';
+            document.getElementById('connText').innerText = connected ? 'Online V9.8.1' : 'Offline';
         });
 
         db.ref('maintenanceState').on('value', snap => {
@@ -217,8 +232,7 @@
                 const cycles = localState.extraCycles[id] || 0;
                 const target = 16000 + (cycles * 16000);
                 const diff = target - ist;
-                let statusClass = "status-green";
-                let color = "#008a4f"; 
+                let statusClass = "status-green", color = "#008a4f"; 
                 if (diff < 0) { statusClass = "status-overdue"; color = "#b00000"; } 
                 else if (diff < 500) { statusClass = "status-red"; color = "#d50000"; } 
                 else if (diff < 5000) { statusClass = "status-yellow"; color = "#ffcf00"; }
@@ -240,10 +254,6 @@
         function renderList(data) {
             const container = document.getElementById('listContainer');
             const isLogged = !!auth.currentUser;
-            if (data.length === 0) {
-                container.innerHTML = '<div style="padding:20px; text-align:center; color:#999">Warte auf Daten...</div>';
-                return;
-            }
             let html = '';
             data.forEach(d => {
                 const canPlus = isLogged && d.diff <= 5000;
@@ -261,23 +271,18 @@
                     <button class="btn-icon btn-plus" ${canPlus ? '' : 'disabled'} onclick="performAction('${d.id}', 'PLUS')">+</button>
                 </div>`;
             });
-            container.innerHTML = html;
+            container.innerHTML = html || '<div style="padding:20px; text-align:center; color:#999">Warte auf Daten...</div>';
         }
 
         function renderChart(data) {
             const ctx = document.getElementById('mainChart').getContext('2d');
             const labels = data.map(d => "A" + d.id);
-            const values = data.map(d => d.diff);
-            const colors = data.map(d => d.color);
-            const pkgNames = data.map(d => d.pkgName); 
-            const totalCounts = data.map(d => d.ist);
-
             if (chartInstance) {
                 chartInstance.data.labels = labels;
-                chartInstance.data.datasets[0].data = values;
-                chartInstance.data.datasets[0].backgroundColor = colors;
-                chartInstance.data.datasets[0].pkgInfo = pkgNames; 
-                chartInstance.data.datasets[0].totalInfo = totalCounts;
+                chartInstance.data.datasets[0].data = data.map(d => d.diff);
+                chartInstance.data.datasets[0].backgroundColor = data.map(d => d.color);
+                chartInstance.data.datasets[0].pkgInfo = data.map(d => d.pkgName); 
+                chartInstance.data.datasets[0].totalInfo = data.map(d => d.ist);
                 chartInstance.update('none'); 
             } else {
                 chartInstance = new Chart(ctx, {
@@ -285,12 +290,11 @@
                     data: {
                         labels: labels,
                         datasets: [{
-                            data: values,
-                            backgroundColor: colors,
-                            borderRadius: 4,
-                            barPercentage: 0.7,
-                            pkgInfo: pkgNames,
-                            totalInfo: totalCounts
+                            data: data.map(d => d.diff),
+                            backgroundColor: data.map(d => d.color),
+                            borderRadius: 4, barPercentage: 0.7,
+                            pkgInfo: data.map(d => d.pkgName),
+                            totalInfo: data.map(d => d.ist)
                         }]
                     },
                     options: {
@@ -298,17 +302,12 @@
                         plugins: {
                             legend: { display: false },
                             datalabels: {
-                                anchor: 'end', align: 'top', color: '#333', 
-                                font: { weight: 'bold' }, rotation: -90, 
+                                anchor: 'end', align: 'top', color: '#333', font: { weight: 'bold' }, rotation: -90, 
                                 formatter: (val) => val.toLocaleString()
                             },
                             tooltip: {
                                 callbacks: {
-                                    label: function(context) {
-                                        const pkg = context.dataset.pkgInfo[context.dataIndex];
-                                        const total = context.dataset.totalInfo[context.dataIndex];
-                                        return ['Paket: ' + pkg, 'Rest: ' + context.parsed.y.toLocaleString(), 'Gesamt: ' + total.toLocaleString()];
-                                    }
+                                    label: (ctx) => ['Paket: ' + ctx.dataset.pkgInfo[ctx.dataIndex], 'Rest: ' + ctx.parsed.y.toLocaleString(), 'Gesamt: ' + ctx.dataset.totalInfo[ctx.dataIndex].toLocaleString()]
                                 }
                             }
                         },
@@ -319,107 +318,75 @@
         }
 
         async function performAction(id, type) {
-            if (!auth.currentUser) return showToast("Bitte anmelden!", "error");
-            resetLogoutTimer(); // Timer bei Aktion zurücksetzen
+            if (!auth.currentUser) return;
+            resetLogoutTimer();
             const user = auth.currentUser.displayName || auth.currentUser.email;
             const updates = {};
-
             if (type === 'PLUS' || type === 'MINUS') {
                 if (type === 'PLUS' && !confirm(`Wartung (+16.000) für A${id} buchen?`)) return;
                 const delta = type === 'PLUS' ? 1 : -1;
-                const newCount = Math.max(0, (localState.extraCycles[id] || 0) + delta);
-                updates[`maintenanceState/extraCycles/${id}`] = newCount;
+                updates[`maintenanceState/extraCycles/${id}`] = Math.max(0, (localState.extraCycles[id] || 0) + delta);
                 pushHistory(id, `Zähler ${delta>0?'+1':'-1'}`, user, updates);
             } else if (type === 'RESET') {
-                const inputPass = prompt(`Admin-Passwort für A${id} Reset:`);
-                if (!inputPass) return;
-                try {
-                    const snap = await db.ref('adminConfig/wpResetPassword').once('value');
-                    if (inputPass === snap.val()) {
-                        const currentOffset = localState.agieOffsets[id] || 0;
-                        updates[`maintenanceState/agieOffsets/${id}`] = currentOffset + 216000;
-                        updates[`maintenanceState/extraCycles/${id}`] = 0;
-                        pushHistory(id, "WP-RESET", user, updates);
-                    } else { showToast("Passwort falsch!", "error"); }
-                } catch (err) { showToast("Fehler", "error"); }
+                const pass = prompt(`Admin-Passwort für A${id} Reset:`);
+                if (!pass) return;
+                const snap = await db.ref('adminConfig/wpResetPassword').once('value');
+                if (pass === snap.val()) {
+                    updates[`maintenanceState/agieOffsets/${id}`] = (localState.agieOffsets[id] || 0) + 216000;
+                    updates[`maintenanceState/extraCycles/${id}`] = 0;
+                    pushHistory(id, "WP-RESET", user, updates);
+                } else showToast("Passwort falsch!", "error");
             }
         }
 
         function pushHistory(id, event, user, updatesObj) {
-            const newKey = db.ref('maintenanceState/history').push().key;
-            updatesObj[`maintenanceState/history/${newKey}`] = {
-                Agie: id, Ereignis: event, Benutzer: user, Zeit: new Date().toLocaleString('de-DE'), ISO: new Date().toISOString()
-            };
-            db.ref().update(updatesObj).then(() => showToast("✅ Gespeichert"))
-                .catch(err => showToast("Fehler: " + err.message, "error"));
+            const key = db.ref('maintenanceState/history').push().key;
+            updatesObj[`maintenanceState/history/${key}`] = { Agie: id, Ereignis: event, Benutzer: user, Zeit: new Date().toLocaleString('de-DE'), ISO: new Date().toISOString() };
+            db.ref().update(updatesObj).then(() => showToast("✅ Gespeichert")).catch(e => showToast(e.message, "error"));
         }
 
         async function performRegister() {
-            const e = document.getElementById('email').value;
-            const p = document.getElementById('pass').value;
+            const e = document.getElementById('email').value, p = document.getElementById('pass').value;
             if (!e || !p) return showToast("Daten unvollständig", "error");
-            const inputCode = prompt("Einladungscode:");
-            if (!inputCode) return;
-            try {
-                const snap = await db.ref('adminConfig/inviteCode').once('value');
-                if (inputCode === snap.val()) {
-                    const name = prompt("Name:");
-                    if(!name) return;
-                    const cred = await auth.createUserWithEmailAndPassword(e, p);
-                    await cred.user.updateProfile({ displayName: name });
-                    document.getElementById('authModal').style.display = 'none';
-                    showToast("Erstellt");
-                } else { showToast("Code falsch", "error"); }
-            } catch (err) { showToast(err.message, "error"); }
+            const code = prompt("Einladungscode:");
+            const snap = await db.ref('adminConfig/inviteCode').once('value');
+            if (code === snap.val()) {
+                const name = prompt("Name:"); if(!name) return;
+                const cred = await auth.createUserWithEmailAndPassword(e, p);
+                await cred.user.updateProfile({ displayName: name });
+                document.getElementById('authModal').style.display = 'none';
+            } else showToast("Code falsch", "error");
         }
 
         function performLogin() {
             auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value)
-                .then(() => { document.getElementById('authModal').style.display = 'none'; showToast("Angemeldet"); })
-                .catch(err => alert("Login-Fehler: " + err.message));
+                .then(() => document.getElementById('authModal').style.display = 'none')
+                .catch(err => alert("Fehler: " + err.message));
         }
 
         async function exportCSV() {
-            const inputPass = prompt("Export-Passwort:");
-            if (!inputPass) return;
-            try {
-                const snap = await db.ref('adminConfig/exportPassword').once('value');
-                if (inputPass === snap.val()) {
-                    let csv = "\uFEFFDatum;Zeit;Maschine;Ereignis;Benutzer\n";
-                    localState.history.forEach(r => csv += `${r.Zeit};${r.Agie};${r.Ereignis};${r.Benutzer}\n`);
-                    const link = document.createElement("a");
-                    link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
-                    link.download = `Wartung_Export.csv`;
-                    link.click();
-                } else { showToast("Passwort falsch!", "error"); }
-            } catch (err) { showToast("Fehler", "error"); }
+            const pass = prompt("Export-Passwort:");
+            const snap = await db.ref('adminConfig/exportPassword').once('value');
+            if (pass === snap.val()) {
+                let csv = "\uFEFFDatum;Maschine;Ereignis;Benutzer\n";
+                localState.history.forEach(r => csv += `${r.Zeit};${r.Agie};${r.Ereignis};${r.Benutzer}\n`);
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+                link.download = `Wartungslog.csv`; link.click();
+            } else showToast("Passwort falsch!", "error");
         }
 
-        function triggerImport() {
-            if (!auth.currentUser) return showToast("Bitte anmelden", "error");
-            document.getElementById('fileInput').click();
-        }
-
+        function triggerImport() { if(auth.currentUser) document.getElementById('fileInput').click(); else showToast("Anmelden!", "error"); }
         document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = this.files[0];
-            if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(ev) {
-                try {
-                    const json = JSON.parse(ev.target.result);
-                    db.ref('maintenanceState/cloudRawData').set(json).then(() => showToast("Import OK"));
-                } catch (err) { showToast("Fehlerhafte Datei", "error"); }
-            };
-            reader.readAsText(file);
+            reader.onload = (ev) => db.ref('maintenanceState/cloudRawData').set(JSON.parse(ev.target.result)).then(() => showToast("Import OK"));
+            reader.readAsText(this.files[0]);
         });
 
         function showToast(msg, type = "success") {
-            const container = document.getElementById('toastContainer');
-            const el = document.createElement('div');
-            el.className = `toast ${type === 'error' ? 'error' : ''}`;
-            el.innerHTML = msg;
-            container.appendChild(el);
-            setTimeout(() => el.classList.add('show'), 10);
+            const c = document.getElementById('toastContainer'), el = document.createElement('div');
+            el.className = `toast ${type === 'error' ? 'error' : ''}`; el.innerHTML = msg;
+            c.appendChild(el); setTimeout(() => el.classList.add('show'), 10);
             setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
         }
 
