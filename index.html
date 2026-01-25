@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V9.8.8 Tooltip-Update</title>
+    <title>Agie Wartung - Bosch V9.8.9 Smart Sync</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -89,34 +89,24 @@
     <div id="helpModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="document.getElementById('helpModal').style.display='none'">&times;</span>
-            <h2 style="color:var(--bosch-blue); border-bottom: 2px solid var(--bosch-red); padding-bottom: 10px; margin-top:0;">🛠 Handbuch & System-Logik (V9.8.8)</h2>
+            <h2 style="color:var(--bosch-blue); border-bottom: 2px solid var(--bosch-red); padding-bottom: 10px; margin-top:0;">🛠 Handbuch & System-Logik (V9.8.9)</h2>
             
             <div class="help-section">
                 <h4>📋 Digitaler Wartungsplan</h4>
-                <p>Dieses Tool visualisiert die Wartungsintervalle der Agie-Maschinen. Ein grüner Balken zeigt ausreichend Puffer, gelb mahnt zur Vorbereitung und rot signalisiert eine fällige Wartung. Dunkelrot bedeutet: Wartung überfällig.</p>
+                <p>Visualisiert die Intervalle. Grün = Puffer, Gelb = Vorbereitung, Rot = Fällig, Dunkelrot = Überfällig.</p>
             </div>
 
             <div class="help-section">
-                <h4>🔄 Zähler & Wartungs-Intervalle</h4>
-                <p><b>Button (+):</b> Bestätigt die Durchführung einer Standardwartung. Der Zielwert wird um +16.000 Stück erhöht.<br>
-                <b>Button (-):</b> Korrigiert eine Fehlbuchung (-16.000).<br>
-                <b>Button (WP):</b> Vollständiger Wartungsplan-Reset (216.000 Stück). Erfordert ein spezielles Admin-Passwort aus der Cloud.</p>
+                <h4>🔄 Zähler-Logik</h4>
+                <p><b>Button (+):</b> Bucht eine Wartung (+16.000).<br>
+                - Ist der Rest <b>positiv</b>: Synchronisierung (Zähler springt exakt auf das nächste Intervall).<br>
+                - Ist der Rest <b>negativ</b>: Addition (Die 16.000 werden zum negativen Stand addiert, der Verzug bleibt erhalten).</p>
             </div>
 
             <div class="help-section">
                 <h4>🔐 Cloud-Sicherheit & Automatik</h4>
-                <p><b>Auto-Logout:</b> Um unbefugte Änderungen an offenen Terminals zu verhindern, wird jeder Benutzer nach <b>20 Sekunden Inaktivität</b> automatisch abgemeldet. Ein Live-Countdown oben rechts zeigt die Restzeit.<br>
-                <b>Einladungscode:</b> Zur Registrierung neuer Konten wird ein gültiger Einladungscode benötigt. Dieser wird zentral durch die Administratoren vergeben.</p>
-            </div>
-
-            <div class="help-section">
-                <h4>📊 Daten & Export</h4>
-                <p>Die Basis-Stückzahlen werden täglich per <b>JSON-Import</b> aktualisiert. Alle manuellen Buchungen (+/-) werden in Echtzeit in der Cloud gespeichert. Über den <b>Export-Button</b> (passwortgeschützt) kann das vollständige Aktivitäts-Logbuch als CSV für Excel heruntergeladen werden.</p>
-            </div>
-
-            <div class="help-section" style="background: #f9f9f9; padding: 10px; border-radius: 4px;">
-                <h4>🛡 Datenschutzhinweis</h4>
-                <p>Namen von Mitarbeitern werden nur im internen Logbuch zur Nachvollziehbarkeit gespeichert, jedoch niemals öffentlich auf dem Dashboard angezeigt.</p>
+                <p><b>Auto-Logout:</b> Abmeldung nach 20 Sekunden Inaktivität. Ein Live-Countdown ist oben rechts sichtbar.<br>
+                <b>Einladungscode:</b> Für neue Registrierungen ist der Code <b>bosch2026</b> erforderlich.</p>
             </div>
 
             <button class="nav-btn btn-primary" style="width:100%; justify-content:center; margin-top:10px" onclick="document.getElementById('helpModal').style.display='none'">Verstanden & Schließen</button>
@@ -214,7 +204,7 @@
         db.ref('.info/connected').on('value', snap => {
             const connected = snap.val();
             document.getElementById('connDot').className = connected ? 'status-dot online' : 'status-dot offline';
-            document.getElementById('connText').innerText = connected ? 'Online V9.8.8' : 'Offline';
+            document.getElementById('connText').innerText = connected ? 'Online V9.8.9' : 'Offline';
         });
 
         db.ref('maintenanceState').on('value', snap => {
@@ -266,8 +256,7 @@
                 if (diff < 0) { statusClass = "status-overdue"; color = "#b00000"; } 
                 else if (diff < 500) { statusClass = "status-red"; color = "#d50000"; } 
                 else if (diff < 5000) { statusClass = "status-yellow"; color = "#ffcf00"; }
-                const pkgName = packages[Math.abs(cycles) % packages.length];
-                return { id, diff, ist, cycles, statusClass, color, pkgName };
+                return { id, diff, ist, cycles, statusClass, color, pkgName: packages[Math.abs(cycles) % packages.length] };
             }).filter(x => x !== null).sort((a, b) => a.diff - b.diff);
         }
 
@@ -354,12 +343,27 @@
             if (!auth.currentUser) return;
             resetLogoutTimer();
             const user = auth.currentUser.displayName || auth.currentUser.email;
+            const metrics = calculateMetrics().find(m => m.id === id);
             const updates = {};
-            if (type === 'PLUS' || type === 'MINUS') {
-                if (type === 'PLUS' && !confirm(`Wartung (+16.000) für A${id} buchen?`)) return;
-                const delta = type === 'PLUS' ? 1 : -1;
-                updates[`maintenanceState/extraCycles/${id}`] = Math.max(0, (localState.extraCycles[id] || 0) + delta);
-                pushHistory(id, `Zähler ${delta>0?'+1':'-1'}`, user, updates);
+
+            if (type === 'PLUS') {
+                if (!confirm(`Wartung für A${id} buchen?`)) return;
+                
+                // Smart Sync Logik
+                let newCycles;
+                if (metrics.diff > 0) {
+                    // Positiver Rest -> Synchronisierung auf nächstes Paket
+                    newCycles = Math.floor(metrics.ist / 16000) + 1;
+                } else {
+                    // Negativer Rest -> Einfach 1 Zyklus addieren (Verzug bleibt)
+                    newCycles = (localState.extraCycles[id] || 0) + 1;
+                }
+                
+                updates[`maintenanceState/extraCycles/${id}`] = newCycles;
+                pushHistory(id, `Wartung (+16k ${metrics.diff > 0 ? 'Sync' : 'Add'})`, user, updates);
+            } else if (type === 'MINUS') {
+                updates[`maintenanceState/extraCycles/${id}`] = Math.max(0, (localState.extraCycles[id] || 0) - 1);
+                pushHistory(id, "Korrektur (-1)", user, updates);
             } else if (type === 'RESET') {
                 const pass = prompt(`Admin-Passwort für A${id} Reset:`);
                 if (!pass) return;
