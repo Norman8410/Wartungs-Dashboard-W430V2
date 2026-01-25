@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V8.1</title>
+    <title>Agie Wartung - Bosch V8.2</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -44,8 +44,7 @@
         }
         .modal-content { 
             background: white; padding: 30px; max-width: 600px; width: 90%; 
-            max-height: 85vh; overflow-y: auto; border-top: 10px solid var(--bosch-red); 
-            position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            max-height: 85vh; border-top: 10px solid var(--bosch-red); position: relative;
         }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #666; }
 
@@ -77,6 +76,7 @@
         .btn-wplan { background: var(--bosch-red); font-size: 11px; width: 42px; }
 
         .sidebar-header { position: sticky; top: 0; background: white; z-index: 10; padding: 15px; border-bottom: 1px solid #eee; margin: 0; color: var(--bosch-blue); }
+        .version-tag { font-size: 12px; color: #888; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -91,45 +91,38 @@
             <button class="nav-btn" style="width:100%; background:var(--bosch-blue); color:white; margin-top:10px" onclick="handleLogin()">Anmelden</button>
             <p onclick="showRegister(true)" style="cursor:pointer; text-decoration:underline; font-size:12px; margin-top:20px; color:#666">Registrieren</p>
         </div>
-        <div class="auth-box" id="register-form" style="display:none">
+        <div id="register-form" class="auth-box" style="display:none">
             <span class="close-modal" onclick="toggleAuthModal(false)">&times;</span>
             <div class="bosch-brand">BOSCH<span> AGIE</span></div>
             <input type="text" id="reg-name" placeholder="Name">
             <input type="email" id="reg-email" placeholder="E-Mail">
             <input type="password" id="reg-pass" placeholder="Passwort">
-            <input type="password" id="reg-invite" placeholder="Code (bosch2026)">
+            <input type="password" id="reg-invite" placeholder="Invite Code">
             <button class="nav-btn" style="width:100%; background:var(--bosch-light-blue); color:white; margin-top:10px" onclick="handleRegister()">Account erstellen</button>
             <p onclick="showRegister(false)" style="cursor:pointer; text-decoration:underline; font-size:12px; margin-top:20px">Zurück</p>
-        </div>
-    </div>
-
-    <div id="helpModal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-modal" onclick="toggleHelp(false)">&times;</span>
-            <h2 style="color:var(--bosch-blue); border-bottom: 2px solid var(--bosch-red); padding-bottom: 10px;">🛠 Bedienungsanleitung</h2>
-            <p>Öffentlicher Modus (Lesen) aktiv. Zum Ändern bitte anmelden.</p>
-            <button class="nav-btn" style="width:100%; margin-top:20px; background:var(--bosch-blue); color:white" onclick="toggleHelp(false)">Schließen</button>
         </div>
     </div>
 
     <div class="top-bar"></div>
     <div class="header">
         <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-        <div id="user-info" style="text-align: right; display: none;">
-            <span id="user-display" style="font-weight:bold; color:var(--bosch-blue)"></span><br>
-            <small onclick="handleLogout()" style="text-decoration:underline; cursor:pointer; color:#666">Abmelden</small>
-        </div>
-        <div id="guest-info" style="text-align: right; color:#666">
-            👁 Nur Lesen (Public Terminal)<br>
-            <small>Version 8.1 | Safe Actions</small>
+        <div style="text-align: right;">
+            <div id="user-info" style="display: none;">
+                <span id="user-display" style="font-weight:bold; color:var(--bosch-blue)"></span><br>
+                <span class="version-tag">V 8.2 | Bearbeitungsmodus</span><br>
+                <small onclick="handleLogout()" style="text-decoration:underline; cursor:pointer; color:#666">Abmelden</small>
+            </div>
+            <div id="guest-info">
+                👁 Nur Lesen (Public Terminal)<br>
+                <span class="version-tag">V 8.2 | Bosch Agie Terminal</span>
+            </div>
         </div>
     </div>
 
     <div class="action-bar">
         <button id="auth-trigger" class="nav-btn btn-login-trigger" onclick="toggleAuthModal(true)">🔑 Anmelden zum Bearbeiten</button>
-        <button class="nav-btn" style="background: var(--bosch-blue); color:white" onclick="triggerJsonLoad()">📥 JSON Laden</button>
+        <button id="btn-json" class="nav-btn" style="background: var(--bosch-blue); color:white" onclick="triggerJsonLoad()">📥 JSON Laden</button>
         <button class="nav-btn" onclick="exportHistory()">📊 CSV Protokoll</button>
-        <button class="nav-btn" onclick="toggleHelp(true)">ℹ️ Hilfe</button>
     </div>
     <input type="file" id="fileInput" style="display:none" accept=".json">
 
@@ -138,7 +131,7 @@
             <div class="chart-container"><canvas id="myChart"></canvas></div>
             <div class="last-activity-box" id="last-activity">
                 <div class="last-activity-title">LETZTE ÄNDERUNG</div>
-                <div class="last-activity-content">Lade...</div>
+                <div class="last-activity-content">Daten werden synchronisiert...</div>
             </div>
         </div>
         <div class="sidebar">
@@ -161,13 +154,12 @@
         const auth = firebase.auth(), db = firebase.database();
         Chart.register(ChartDataLabels);
 
-        let myChart, rawData = [], state = { extraCycles: {}, agieOffsets: {}, history: [], cloudRawData: [] };
+        let myChart, state = { extraCycles: {}, agieOffsets: {}, history: [], cloudRawData: [] };
         const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
 
         function toggleAuthModal(show) { document.getElementById('authModal').style.display = show ? 'flex' : 'none'; }
         function showRegister(s) { document.getElementById('login-form').style.display = s?'none':'block'; document.getElementById('register-form').style.display = s?'block':'none'; }
-        function toggleHelp(show) { document.getElementById('helpModal').style.display = show ? 'flex' : 'none'; }
-
+        
         function handleLogin() { 
             auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value)
             .then(() => toggleAuthModal(false))
@@ -185,31 +177,48 @@
             document.getElementById('user-info').style.display = isLogged ? 'block' : 'none';
             document.getElementById('guest-info').style.display = isLogged ? 'none' : 'block';
             const trigger = document.getElementById('auth-trigger');
+            
             if(isLogged) {
                 trigger.innerText = "🔓 Bearbeitung aktiv"; trigger.classList.add('btn-login-active');
                 document.getElementById('user-display').innerText = "👤 " + user.displayName;
             } else {
                 trigger.innerText = "🔑 Anmelden zum Bearbeiten"; trigger.classList.remove('btn-login-active');
             }
+
             db.ref('maintenanceState').on('value', snap => { 
                 const val = snap.val();
-                if(val) { state = val; rawData = state.cloudRawData || []; updateUI(isLogged); } 
+                if(val) { 
+                    state = val;
+                    if(!state.extraCycles) state.extraCycles = {};
+                    if(!state.agieOffsets) state.agieOffsets = {};
+                    updateUI(isLogged); 
+                } 
             });
         });
 
-        function triggerJsonLoad() { if(!auth.currentUser) return toggleAuthModal(true); document.getElementById('fileInput').click(); }
+        function triggerJsonLoad() { 
+            if(!auth.currentUser) return alert("Bitte erst oben anmelden!"); 
+            document.getElementById('fileInput').click(); 
+        }
+
         document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = this.files[0]; if(!file) return;
+            const file = this.files[0];
+            if(!file) return;
             const reader = new FileReader();
             reader.onload = function(ev) { 
-                try { state.cloudRawData = JSON.parse(ev.target.result); db.ref('maintenanceState').update(state); } catch(err) { alert("JSON Fehler!"); }
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if(!Array.isArray(data)) throw new Error("Keine gültige Agie-Liste");
+                    state.cloudRawData = data;
+                    db.ref('maintenanceState').update(state).then(() => alert("✅ JSON erfolgreich synchronisiert!"));
+                } catch(err) { alert("JSON Fehler: " + err.message); }
             };
             reader.readAsText(file);
         });
 
         function updateUI(isLogged) {
-            if(!rawData || !Array.isArray(rawData)) return;
-            const processed = rawData.map(item => {
+            const raw = state.cloudRawData || [];
+            const processed = raw.map(item => {
                 const id = item.StationNo;
                 const ist = Number(item.Parts || 0) - (state.agieOffsets[id] || 0);
                 const count = state.extraCycles[id] || 0;
@@ -220,6 +229,7 @@
                 else if(diff < 5000) { s = "status-yellow"; c = "#ffcf00"; }
                 return { id, diff, ist, count, status: s, color: c, pkg: packages[Math.abs(count)%packages.length] || "P1" };
             }).sort((a,b) => a.diff - b.diff);
+            
             renderChart(processed);
             renderControls(processed, isLogged);
             renderLastActivity();
@@ -242,19 +252,16 @@
             });
         }
 
-        // --- AKTUALISIERTE FUNKTIONEN MIT SICHERHEITSABFRAGE ---
         function change(id, delta) {
             if(!auth.currentUser) return;
-            if(delta > 0) {
-                if(!confirm(`Möchtest du für Agie A${id} wirklich einen neuen Wartungszyklus (+16.000 Stück) buchen?`)) return;
-            }
+            if(delta > 0 && !confirm(`Neuen Wartungszyklus (+16.000) für A${id} buchen?`)) return;
             state.extraCycles[id] = Math.max(0, (state.extraCycles[id]||0) + delta);
             saveLog(id, `Zähler ${delta>0?'+1':'-1'}`, state.extraCycles[id]);
         }
 
         function wpReset(id) {
             if(!auth.currentUser) return;
-            if(confirm(`⚠️ ACHTUNG: Du setzt den Wartungsplan (216.000 Stück) für Agie A${id} komplett zurück. Dies ist nur nach einem großen Service zulässig. Fortfahren?`)) {
+            if(confirm(`⚠️ Agie A${id} WP-RESET buchen?`)) {
                 state.agieOffsets[id] = (state.agieOffsets[id]||0) + 216000;
                 state.extraCycles[id] = 0;
                 saveLog(id, "WP-RESET", 0);
@@ -290,7 +297,7 @@
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', rotation: -90, font: { weight: 900 } },
                     tooltip: { callbacks: { label: function(c) {
-                        return ['Paket: ' + c.dataset.pkgValues[c.dataIndex], 'Rest: ' + c.parsed.y.toLocaleString(), 'Ist seit WP: ' + c.dataset.istValues[c.dataIndex].toLocaleString()];
+                        return ['Paket: ' + c.dataset.pkgValues[c.dataIndex], 'Rest: ' + c.parsed.y.toLocaleString()];
                     }}}}
                 }
             });
@@ -301,7 +308,7 @@
             (state.history||[]).forEach(r => csv += `${r.Zeitstempel};${r.Agie};${r.Ereignis};${r.Benutzer};${r.Zaehlerstand}\n`);
             const link = document.createElement("a");
             link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-            link.download = "Agie_Protokoll.csv"; link.click();
+            link.download = "Agie_Export.csv"; link.click();
         }
     </script>
 </body>
