@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V9.7.1 Cloud-Secure</title>
+    <title>Agie Wartung - Bosch V9.8 Cloud-Secure (Auto-Logout)</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -86,23 +86,15 @@
             <h2 style="color:var(--bosch-blue); border-bottom: 2px solid var(--bosch-red); padding-bottom: 10px;">🛠 Bedienungsanleitung & Info</h2>
             <div class="help-section">
                 <h4>📋 Digitaler Wartungsplan</h4>
-                <p>Nach einer Validierungsphase soll dieses System den händischen Plan an der Maschine dauerhaft ersetzen.</p>
+                <p>Nach einer Validierungsphase soll dieses System den händischen Plan dauerhaft ersetzen.</p>
             </div>
             <div class="help-section">
-                <h4>👁 Öffentlicher Modus & Login</h4>
-                <p>Das Dashboard ist im Lesemodus für alle einsehbar. Um Änderungen vorzunehmen, ist ein Login erforderlich.</p>
-            </div>
-            <div class="help-section">
-                <h4>🔄 Datenaktualität</h4>
-                <p>Die Stückzahlen der Maschinen werden 1-mal täglich über den JSON-Import aktualisiert.</p>
+                <h4>🔄 Automatischer Logout</h4>
+                <p>Aus Sicherheitsgründen wird die Sitzung nach <b>20 Sekunden Inaktivität</b> automatisch beendet.</p>
             </div>
             <div class="help-section">
                 <h4>⚠️ Sicherheit & Zähler</h4>
-                <p><b>Button (+):</b> Bucht einen Zyklus (+16.000).<br><b>Button (WP):</b> Setzt den Plan (216.000) nach Passwort-Prüfung komplett zurück.</p>
-            </div>
-            <div class="help-section">
-                <h4>🛡 Datenschutz</h4>
-                <p>Jede Änderung wird protokolliert. Benutzernamen werden zum Schutz der Privatsphäre auf dem Dashboard ausgeblendet.</p>
+                <p><b>Button (+):</b> Bucht einen Zyklus (+16.000).<br><b>Button (WP):</b> Setzt den Plan (216.000) nach Passwort-Prüfung zurück.</p>
             </div>
             <button class="nav-btn btn-primary" style="width:100%; justify-content:center; margin-top:10px" onclick="document.getElementById('helpModal').style.display='none'">Verstanden</button>
         </div>
@@ -159,12 +151,29 @@
 
         let localState = { cloudRawData: [], extraCycles: {}, agieOffsets: {}, history: [] };
         let chartInstance = null;
+        let logoutTimer = null;
         const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
+
+        // --- AUTO LOGOUT LOGIK ---
+        function resetLogoutTimer() {
+            if (logoutTimer) clearTimeout(logoutTimer);
+            if (auth.currentUser) {
+                logoutTimer = setTimeout(() => {
+                    auth.signOut();
+                    showToast("Sitzung beendet (Inaktivität)", "error");
+                }, 20000); // 20 Sekunden
+            }
+        }
+
+        // Überwachung von Nutzeraktivitäten
+        ['mousedown', 'mousemove', 'keypress', 'touchstart'].forEach(evt => {
+            window.addEventListener(evt, resetLogoutTimer, false);
+        });
 
         db.ref('.info/connected').on('value', snap => {
             const connected = snap.val();
             document.getElementById('connDot').className = connected ? 'status-dot online' : 'status-dot offline';
-            document.getElementById('connText').innerText = connected ? 'Online V9.7.1' : 'Offline';
+            document.getElementById('connText').innerText = connected ? 'Online V9.8' : 'Offline';
         });
 
         db.ref('maintenanceState').on('value', snap => {
@@ -186,11 +195,13 @@
                 btn.classList.add('btn-active');
                 btn.onclick = () => { if(confirm("Abmelden?")) auth.signOut(); };
                 stat.innerText = "Änderungsmodus aktiv";
+                resetLogoutTimer();
             } else {
                 btn.innerHTML = "🔑 Anmelden";
                 btn.classList.remove('btn-active');
                 btn.onclick = () => document.getElementById('authModal').style.display = 'flex';
                 stat.innerText = "👁 Nur Lesemodus";
+                if (logoutTimer) clearTimeout(logoutTimer);
             }
             refreshUI();
         });
@@ -283,8 +294,7 @@
                         }]
                     },
                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
+                        responsive: true, maintainAspectRatio: false,
                         plugins: {
                             legend: { display: false },
                             datalabels: {
@@ -297,11 +307,7 @@
                                     label: function(context) {
                                         const pkg = context.dataset.pkgInfo[context.dataIndex];
                                         const total = context.dataset.totalInfo[context.dataIndex];
-                                        return [
-                                            'Paket: ' + pkg, 
-                                            'Reststückzahl bis Wartung: ' + context.parsed.y.toLocaleString(),
-                                            'Gesamtstückzahl seit Wartungsplan wechsel: ' + total.toLocaleString()
-                                        ];
+                                        return ['Paket: ' + pkg, 'Rest: ' + context.parsed.y.toLocaleString(), 'Gesamt: ' + total.toLocaleString()];
                                     }
                                 }
                             }
@@ -314,7 +320,7 @@
 
         async function performAction(id, type) {
             if (!auth.currentUser) return showToast("Bitte anmelden!", "error");
-            
+            resetLogoutTimer(); // Timer bei Aktion zurücksetzen
             const user = auth.currentUser.displayName || auth.currentUser.email;
             const updates = {};
 
@@ -325,24 +331,17 @@
                 updates[`maintenanceState/extraCycles/${id}`] = newCount;
                 pushHistory(id, `Zähler ${delta>0?'+1':'-1'}`, user, updates);
             } else if (type === 'RESET') {
-                const inputPass = prompt(`⚠️ WP-RESET (216.000) für A${id}. Admin-Passwort erforderlich:`);
+                const inputPass = prompt(`Admin-Passwort für A${id} Reset:`);
                 if (!inputPass) return;
-
                 try {
-                    const snapshot = await db.ref('adminConfig/wpResetPassword').once('value');
-                    const cloudWPPass = snapshot.val();
-
-                    if (inputPass === cloudWPPass) {
+                    const snap = await db.ref('adminConfig/wpResetPassword').once('value');
+                    if (inputPass === snap.val()) {
                         const currentOffset = localState.agieOffsets[id] || 0;
                         updates[`maintenanceState/agieOffsets/${id}`] = currentOffset + 216000;
                         updates[`maintenanceState/extraCycles/${id}`] = 0;
                         pushHistory(id, "WP-RESET", user, updates);
-                    } else {
-                        showToast("❌ Passwort falsch!", "error");
-                    }
-                } catch (err) {
-                    showToast("Sicherheitsfehler", "error");
-                }
+                    } else { showToast("Passwort falsch!", "error"); }
+                } catch (err) { showToast("Fehler", "error"); }
             }
         }
 
@@ -359,30 +358,29 @@
             const e = document.getElementById('email').value;
             const p = document.getElementById('pass').value;
             if (!e || !p) return showToast("Daten unvollständig", "error");
-            const inputCode = prompt("Einladungscode eingeben:");
+            const inputCode = prompt("Einladungscode:");
             if (!inputCode) return;
             try {
                 const snap = await db.ref('adminConfig/inviteCode').once('value');
                 if (inputCode === snap.val()) {
-                    const name = prompt("Name für Logbuch:");
+                    const name = prompt("Name:");
                     if(!name) return;
                     const cred = await auth.createUserWithEmailAndPassword(e, p);
                     await cred.user.updateProfile({ displayName: name });
                     document.getElementById('authModal').style.display = 'none';
-                    showToast("Konto erstellt");
-                } else { showToast("Code falsch!", "error"); }
+                    showToast("Erstellt");
+                } else { showToast("Code falsch", "error"); }
             } catch (err) { showToast(err.message, "error"); }
         }
 
         function performLogin() {
             auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value)
                 .then(() => { document.getElementById('authModal').style.display = 'none'; showToast("Angemeldet"); })
-                .catch(err => alert("Fehler: " + err.message));
+                .catch(err => alert("Login-Fehler: " + err.message));
         }
 
         async function exportCSV() {
-            if(!localState.history.length) return showToast("Keine Daten", "error");
-            const inputPass = prompt("Admin-Passwort für Export:");
+            const inputPass = prompt("Export-Passwort:");
             if (!inputPass) return;
             try {
                 const snap = await db.ref('adminConfig/exportPassword').once('value');
@@ -394,7 +392,7 @@
                     link.download = `Wartung_Export.csv`;
                     link.click();
                 } else { showToast("Passwort falsch!", "error"); }
-            } catch (err) { showToast("Zugriff verweigert", "error"); }
+            } catch (err) { showToast("Fehler", "error"); }
         }
 
         function triggerImport() {
