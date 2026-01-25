@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V9.7 Cloud-Secure</title>
+    <title>Agie Wartung - Bosch V9.7.1 Cloud-Secure</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -86,15 +86,23 @@
             <h2 style="color:var(--bosch-blue); border-bottom: 2px solid var(--bosch-red); padding-bottom: 10px;">🛠 Bedienungsanleitung & Info</h2>
             <div class="help-section">
                 <h4>📋 Digitaler Wartungsplan</h4>
-                <p>Ersetzt den händischen Plan. Alle Daten werden revisionssicher protokolliert.</p>
+                <p>Nach einer Validierungsphase soll dieses System den händischen Plan an der Maschine dauerhaft ersetzen.</p>
+            </div>
+            <div class="help-section">
+                <h4>👁 Öffentlicher Modus & Login</h4>
+                <p>Das Dashboard ist im Lesemodus für alle einsehbar. Um Änderungen vorzunehmen, ist ein Login erforderlich.</p>
+            </div>
+            <div class="help-section">
+                <h4>🔄 Datenaktualität</h4>
+                <p>Die Stückzahlen der Maschinen werden 1-mal täglich über den JSON-Import aktualisiert.</p>
             </div>
             <div class="help-section">
                 <h4>⚠️ Sicherheit & Zähler</h4>
-                <p><b>Button (+):</b> Bucht einen Zyklus (+16.000).<br><b>Button (WP):</b> Vollständiger Wartungsplan-Reset (Passwortgeschützt).</p>
+                <p><b>Button (+):</b> Bucht einen Zyklus (+16.000).<br><b>Button (WP):</b> Setzt den Plan (216.000) nach Passwort-Prüfung komplett zurück.</p>
             </div>
             <div class="help-section">
                 <h4>🛡 Datenschutz</h4>
-                <p>Nutzernamen werden zur Wahrung der Privatsphäre auf dem Dashboard nicht öffentlich angezeigt.</p>
+                <p>Jede Änderung wird protokolliert. Benutzernamen werden zum Schutz der Privatsphäre auf dem Dashboard ausgeblendet.</p>
             </div>
             <button class="nav-btn btn-primary" style="width:100%; justify-content:center; margin-top:10px" onclick="document.getElementById('helpModal').style.display='none'">Verstanden</button>
         </div>
@@ -156,7 +164,7 @@
         db.ref('.info/connected').on('value', snap => {
             const connected = snap.val();
             document.getElementById('connDot').className = connected ? 'status-dot online' : 'status-dot offline';
-            document.getElementById('connText').innerText = connected ? 'Online V9.7' : 'Offline';
+            document.getElementById('connText').innerText = connected ? 'Online V9.7.1' : 'Offline';
         });
 
         db.ref('maintenanceState').on('value', snap => {
@@ -317,7 +325,6 @@
                 updates[`maintenanceState/extraCycles/${id}`] = newCount;
                 pushHistory(id, `Zähler ${delta>0?'+1':'-1'}`, user, updates);
             } else if (type === 'RESET') {
-                // NEU: WP-Reset Schutz mit Cloud-Passwort
                 const inputPass = prompt(`⚠️ WP-RESET (216.000) für A${id}. Admin-Passwort erforderlich:`);
                 if (!inputPass) return;
 
