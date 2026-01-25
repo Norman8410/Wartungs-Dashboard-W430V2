@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V9.9.1 Professional</title>
+    <title>Agie Wartung - Bosch V9.9.2 Final Fix</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -14,51 +14,45 @@
             --bosch-red: #d50000; --bosch-blue: #003a6c; --bosch-light-blue: #00b5e2; 
             --bosch-green: #008a4f; --bosch-gray: #eff1f2; --text-dark: #333;
         }
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bosch-gray); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; user-select: none; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bosch-gray); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         .top-bar { height: 8px; width: 100%; background: linear-gradient(90deg, var(--bosch-red) 25%, var(--bosch-blue) 25%, var(--bosch-blue) 50%, var(--bosch-light-blue) 50%, var(--bosch-light-blue) 75%, var(--bosch-green) 75%); flex-shrink: 0; }
-        .header { background: white; padding: 12px 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .header { background: white; padding: 12px 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
         .bosch-brand { color: var(--bosch-red); font-weight: 900; font-size: 24px; letter-spacing: -0.5px; }
         .bosch-brand span { color: var(--bosch-blue); }
-        .status-area { display: flex; align-items: center; gap: 20px; }
-        .logout-timer { font-size: 12px; font-weight: 600; color: #666; display: none; background: #fff; padding: 4px 10px; border-radius: 15px; border: 1px solid #ddd; }
-        .timer-warning { color: var(--bosch-red) !important; font-weight: 900 !important; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        .action-bar { padding: 10px 30px; display: flex; gap: 12px; align-items: center; flex-shrink: 0; background: var(--bosch-gray); }
-        .nav-btn { padding: 8px 16px; cursor: pointer; border: 1px solid #bfc0c2; background: white; font-weight: 700; color: var(--bosch-blue); border-radius: 2px; transition: all 0.2s; font-size: 13px; display: flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .action-bar { padding: 10px 30px; display: flex; gap: 12px; align-items: center; background: var(--bosch-gray); }
+        .nav-btn { padding: 8px 16px; cursor: pointer; border: 1px solid #bfc0c2; background: white; font-weight: 700; color: var(--bosch-blue); border-radius: 2px; }
         .btn-primary { background: var(--bosch-blue); color: white; border-color: var(--bosch-blue); }
 
-        .main-layout { display: flex; flex: 1; padding: 10px 30px 20px 30px; gap: 20px; box-sizing: border-box; overflow: hidden; }
-        .content-area { flex: 3; display: flex; flex-direction: column; gap: 15px; min-width: 0; overflow: hidden; }
-        .sidebar { flex: 1.2; background: white; border-top: 4px solid var(--bosch-light-blue); overflow-y: auto; max-width: 500px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .chart-container { background: white; padding: 15px; border-top: 4px solid var(--bosch-blue); flex: 1; min-height: 0; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .main-layout { display: flex; flex: 1; padding: 10px 30px 20px 30px; gap: 20px; overflow: hidden; }
+        .content-area { flex: 3; display: flex; flex-direction: column; gap: 15px; position: relative; }
+        .sidebar { flex: 1.2; background: white; border-top: 4px solid var(--bosch-light-blue); overflow-y: auto; max-width: 450px; }
+        .chart-container { background: white; padding: 15px; border-top: 4px solid var(--bosch-blue); flex: 1; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
-        #btnShowPresentation { position: absolute; bottom: 15px; right: 15px; z-index: 10; display: none; background: var(--bosch-green); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        /* Der Präsentations Button */
+        #btnShowPresentation { 
+            position: absolute; bottom: 20px; right: 20px; z-index: 100; 
+            display: none; background: var(--bosch-green); color: white; 
+            border: none; padding: 12px 20px; border-radius: 4px; 
+            cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
 
-        /* PowerPoint Styles */
-        .ppt-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,10,0.98); z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .ppt-slide { background: white; width: 85%; height: 75%; max-width: 1100px; padding: 60px; border-radius: 4px; display: none; flex-direction: column; position: relative; border-top: 10px solid var(--bosch-red); }
+        /* PPT Styles */
+        .ppt-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .ppt-slide { background: white; width: 80%; height: 70%; padding: 50px; border-radius: 4px; display: none; flex-direction: column; position: relative; border-top: 8px solid var(--bosch-red); }
         .ppt-slide.active { display: flex; }
-        .ppt-header { color: var(--bosch-blue); border-bottom: 2px solid #eee; margin-bottom: 30px; font-size: 36px; font-weight: 900; }
-        .ppt-content { font-size: 22px; line-height: 1.7; color: #333; }
-        .ppt-footer { margin-top: auto; display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 20px; font-weight: bold; color: #999; }
-        .ppt-nav { position: absolute; bottom: 30px; display: flex; gap: 20px; }
-        .ppt-btn { background: var(--bosch-blue); color: white; border: none; padding: 12px 35px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .ppt-header { color: var(--bosch-blue); font-size: 32px; font-weight: 900; border-bottom: 2px solid #eee; margin-bottom: 20px; }
+        .ppt-content { font-size: 20px; line-height: 1.6; color: #333; }
+        .ppt-nav { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; }
 
-        /* Button Status Styles */
-        .control-row { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f0f0f0; border-left: 6px solid #ccc; gap: 10px; }
-        .status-overdue { border-left-color: #b00000; background: #ffe0e0; }
-        .status-red { border-left-color: var(--bosch-red); background: #fff5f5; }
-        .status-yellow { border-left-color: #ffcf00; background: #fffef0; }
-        .status-green { border-left-color: var(--bosch-green); background: #f0fdf4; }
-        
-        .btn-icon { width: 36px; height: 36px; cursor: pointer; border: none; color: white; font-weight: bold; border-radius: 4px; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .btn-icon:disabled { background-color: #e0e0e0 !important; color: #aaa !important; cursor: not-allowed; opacity: 0.5; box-shadow: none; }
+        /* Button Styling in der Liste */
+        .control-row { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #f0f0f0; border-left: 6px solid #ccc; gap: 8px; }
+        .btn-icon { width: 34px; height: 34px; cursor: pointer; border: none; color: white; font-weight: bold; border-radius: 4px; }
+        .btn-icon:disabled { background-color: #e0e0e0 !important; color: #aaa !important; cursor: not-allowed; opacity: 0.5; }
         .btn-plus { background: var(--bosch-light-blue); }
         .btn-minus { background: var(--bosch-blue); }
-        .btn-wp { background: var(--bosch-red); font-size: 11px; width: 40px; }
-        
-        .activity-bar { background: white; padding: 10px 15px; border-left: 4px solid #ccc; font-size: 13px; color: #555; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .btn-wp { background: var(--bosch-red); font-size: 10px; width: 38px; }
+
+        .logout-timer { font-size: 12px; font-weight: bold; color: #666; display: none; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 12px 20px; border-radius: 4px; z-index: 6000; display: none; }
     </style>
 </head>
@@ -67,69 +61,49 @@
     <div id="toast" class="toast"></div>
 
     <div id="pptOverlay" class="ppt-overlay">
-        <button style="position:absolute; top:25px; right:30px; background:none; border:none; font-size:40px; cursor:pointer; color:#999;" onclick="closePPT()">&times;</button>
         <div class="ppt-slide active" id="slide1">
-            <div class="ppt-header">01. Dashboard Berechnungs-Logik</div>
+            <div class="ppt-header">Dashboard Berechnung</div>
             <div class="ppt-content">
                 <ul>
-                    <li><b>Echtzeit-Stückzahl:</b> Direkter Abgleich mit dem Maschinenimport.</li>
-                    <li><b>Zielwert (Target):</b> <code>16.000 + (Zyklen × 16.000)</code>.</li>
-                    <li><b>Offset:</b> Subtrahiert 216.000 pro WP-Reset zur Korrektur des Lebenszyklus.</li>
+                    <li><b>Ist-Wert:</b> Rohe Stückzahl minus WP-Offset.</li>
+                    <li><b>Soll-Wert:</b> 16.000er Schritte basierend auf Zyklen.</li>
+                    <li><b>Rest:</b> Die Differenz (Balkenhöhe).</li>
                 </ul>
             </div>
-            <div class="ppt-footer"><span>BOSCH AGIE MAINTAINER</span><span>1 / 4</span></div>
         </div>
         <div class="ppt-slide" id="slide2">
-            <div class="ppt-header">02. Smart-Sync (+)</div>
+            <div class="ppt-header">Sicherheits-Konzept</div>
             <div class="ppt-content">
-                <p><b>Positiver Rest:</b> Zähler wird auf das nächste volle 16k-Paket synchronisiert.</p>
-                <p><b>Negativer Rest:</b> Es werden stur +16.000 addiert, um den Verzug sichtbar zu halten.</p>
+                <ul>
+                    <li><b>Admin-PW:</b> In Firebase (adminConfig) hinterlegt.</li>
+                    <li><b>Auto-Logout:</b> Inaktivitätsschutz nach 20 Sekunden.</li>
+                    <li><b>Einladungscode:</b> bosch2026 für neue User.</li>
+                </ul>
             </div>
-            <div class="ppt-footer"><span>BOSCH AGIE MAINTAINER</span><span>2 / 4</span></div>
         </div>
-        <div class="ppt-slide" id="slide3">
-            <div class="ppt-header">03. Sicherheit & Admin</div>
-            <div class="ppt-content">
-                <p>Passwörter für WP-Reset und Export liegen in der <code>adminConfig</code>.</p>
-                <p>Inaktive Terminals sperren sich nach 20 Sekunden automatisch.</p>
-            </div>
-            <div class="ppt-footer"><span>BOSCH AGIE MAINTAINER</span><span>3 / 4</span></div>
+        <div class="ppt-nav">
+            <button class="nav-btn" onclick="changeSlide(-1)">Zurück</button>
+            <button class="nav-btn btn-primary" onclick="changeSlide(1)">Weiter</button>
+            <button class="nav-btn" onclick="closePPT()">Schließen</button>
         </div>
-        <div class="ppt-slide" id="slide4">
-            <div class="ppt-header">04. Audit-Log & Export</div>
-            <div class="ppt-content">
-                <p>Jede Änderung wird im <code>history</code> Pfad mit User-ID und Zeitstempel verewigt.</p>
-                <p>Export als CSV ist jederzeit für berechtigte Personen möglich.</p>
-            </div>
-            <div class="ppt-footer"><span>BOSCH AGIE MAINTAINER</span><span>4 / 4</span></div>
-        </div>
-        <div class="ppt-nav"><button class="ppt-btn" onclick="changeSlide(-1)">ZURÜCK</button><button class="ppt-btn" onclick="changeSlide(1)">WEITER</button></div>
     </div>
 
     <div class="top-bar"></div>
     <div class="header">
         <div class="bosch-brand">BOSCH<span> AGIE</span></div>
-        <div class="status-area">
-            <div id="logoutDisplay" class="logout-timer">Logout in: <span id="secondsLeft">20</span>s</div>
-            <div id="connText" style="font-size:12px; color:#888">Verbinde...</div>
-        </div>
+        <div id="logoutDisplay" class="logout-timer">Logout: <span id="secondsLeft">20</span>s</div>
     </div>
 
     <div class="action-bar">
         <button id="btnLogin" class="nav-btn" onclick="showAuth()">🔑 Anmelden</button>
-        <button class="nav-btn btn-primary" onclick="triggerImport()">📥 Import</button>
-        <button class="nav-btn" onclick="exportCSV()">📊 Export</button>
+        <button class="nav-btn btn-primary" onclick="alert('Import...')">📥 Import</button>
     </div>
 
     <div class="main-layout">
         <div class="content-area">
             <div class="chart-container">
                 <canvas id="mainChart"></canvas>
-                <button id="btnShowPresentation" onclick="openPPT()">📊 System-Präsentation</button>
-            </div>
-            <div class="activity-bar">
-                <span id="lastActionText">Lade Logbuch...</span>
-                <span id="userStatus" style="font-weight:bold; color:var(--bosch-blue)">Lesemodus</span>
+                <button id="btnShowPresentation" onclick="openPPT()">📊 System-Hilfe</button>
             </div>
         </div>
         <div class="sidebar" id="listContainer"></div>
@@ -148,23 +122,27 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
-        Chart.register(ChartDataLabels);
 
-        let localState = { cloudRawData: [], extraCycles: {}, agieOffsets: {}, history: [] };
-        let chartInstance = null, logoutTimer = null, countdownInterval = null, remainingSeconds = 20, currentSlide = 1;
-        const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
+        let localState = { cloudRawData: [], extraCycles: {}, agieOffsets: {} };
+        let chartInstance = null, logoutTimer = null, currentSlide = 1;
 
-        function calculateMetrics() {
-            if (!localState.cloudRawData.length) return [];
-            return localState.cloudRawData.map(item => {
+        function refreshUI() {
+            const isLogged = !!auth.currentUser;
+            const data = localState.cloudRawData.map(item => {
                 const id = item.StationNo;
                 const ist = (parseInt(item.Parts) || 0) - (localState.agieOffsets[id] || 0);
                 const cycles = localState.extraCycles[id] || 0;
                 const target = 16000 + (cycles * 16000);
                 const diff = target - ist;
-                let color = diff < 0 ? "#b00000" : (diff < 500 ? "#d50000" : (diff < 5000 ? "#ffcf00" : "#008a4f"));
-                return { id, diff, ist, cycles, color, pkgName: packages[Math.abs(cycles) % packages.length] };
+                const color = diff < 0 ? "#b00000" : (diff < 500 ? "#d50000" : (diff < 5000 ? "#ffcf00" : "#008a4f"));
+                return { id, diff, ist, cycles, color, target };
             }).sort((a,b) => a.diff - b.diff);
+
+            renderChart(data);
+            renderList(data, isLogged);
+            
+            // WICHTIG: Button nur zeigen wenn eingeloggt
+            document.getElementById('btnShowPresentation').style.display = isLogged ? 'block' : 'none';
         }
 
         function renderChart(data) {
@@ -177,139 +155,86 @@
                     datasets: [{ 
                         data: data.map(d => d.diff), 
                         backgroundColor: data.map(d => d.color),
-                        pkgInfo: data.map(d => d.pkgName),
-                        istInfo: data.map(d => d.ist),
-                        targetInfo: data.map(d => 16000 + (d.cycles * 16000))
+                        istData: data.map(d => d.ist),
+                        targetData: data.map(d => d.target)
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
-                        datalabels: { anchor: 'end', align: 'top', rotation: -90, formatter: v => v.toLocaleString() },
                         tooltip: {
                             callbacks: {
                                 label: (ctx) => [
-                                    `Nächstes Paket: ${ctx.dataset.pkgInfo[ctx.dataIndex]}`,
                                     `Reststücke: ${ctx.parsed.y.toLocaleString()}`,
-                                    `Ist-Wert (netto): ${ctx.dataset.istInfo[ctx.dataIndex].toLocaleString()}`,
-                                    `Soll-Wert (Trigger): ${ctx.dataset.targetInfo[ctx.dataIndex].toLocaleString()}`
+                                    `Ist-Wert: ${ctx.dataset.istData[ctx.dataIndex].toLocaleString()}`,
+                                    `Soll-Wert: ${ctx.dataset.targetData[ctx.dataIndex].toLocaleString()}`
                                 ]
                             }
                         }
-                    },
-                    scales: { y: { beginAtZero: true } }
+                    }
                 }
             });
         }
 
-        function refreshUI() {
-            const data = calculateMetrics();
-            renderChart(data);
-            const container = document.getElementById('listContainer'), isLogged = !!auth.currentUser;
-            let html = '<div style="padding:15px; font-weight:bold; color:var(--bosch-blue); background:#f9f9f9; border-bottom:1px solid #ddd">Maschinen Status</div>';
+        function renderList(data, isLogged) {
+            let html = '';
             data.forEach(d => {
-                const rowClass = d.diff < 0 ? 'status-overdue' : (d.diff < 500 ? 'status-red' : (d.diff < 5000 ? 'status-yellow' : 'status-green'));
-                html += `<div class="control-row ${rowClass}">
-                    <div style="flex:1"><b>A${d.id}</b><div style="font-size:10px">${d.pkgName}</div></div>
-                    <div style="flex:1; font-weight:bold; text-align:right; padding-right:15px">${d.diff.toLocaleString()}</div>
-                    <button class="btn-icon btn-wp" ${isLogged && d.ist >= 215500 ? '' : 'disabled'} onclick="performAction('${d.id}', 'RESET')">WP</button>
-                    <button class="btn-icon btn-minus" ${isLogged ? '' : 'disabled'} onclick="performAction('${d.id}', 'MINUS')">-</button>
-                    <div style="width:20px; text-align:center; font-weight:bold">${d.cycles}</div>
-                    <button class="btn-icon btn-plus" ${isLogged && d.diff <= 5000 ? '' : 'disabled'} onclick="performAction('${d.id}', 'PLUS')">+</button>
+                html += `<div class="control-row">
+                    <div style="flex:1"><b>A${d.id}</b></div>
+                    <div style="flex:1; text-align:right"><b>${d.diff.toLocaleString()}</b></div>
+                    <button class="btn-icon btn-wp" ${isLogged && d.ist >= 215500 ? '' : 'disabled'}>WP</button>
+                    <button class="btn-icon btn-minus" ${isLogged ? '' : 'disabled'}>-</button>
+                    <div style="width:20px; text-align:center">${d.cycles}</div>
+                    <button class="btn-icon btn-plus" ${isLogged && d.diff <= 5000 ? '' : 'disabled'}>+</button>
                 </div>`;
             });
-            container.innerHTML = html;
+            document.getElementById('listContainer').innerHTML = html;
         }
 
-        async function performAction(id, type) {
-            const metrics = calculateMetrics().find(m => m.id === id);
-            const user = auth.currentUser.displayName || auth.currentUser.email;
-            const updates = {};
-            if (type === 'PLUS') {
-                if (!confirm(`Wartung für A${id} jetzt buchen?`)) return;
-                let newCycles = (metrics.diff > 0) ? Math.floor(metrics.ist / 16000) + 1 : metrics.cycles + 1;
-                updates[`maintenanceState/extraCycles/${id}`] = newCycles;
-                pushHistory(id, `Wartung (+16k ${metrics.diff > 0 ? 'Sync' : 'Add'})`, user, updates);
-            } else if (type === 'MINUS') {
-                updates[`maintenanceState/extraCycles/${id}`] = Math.max(0, metrics.cycles - 1);
-                pushHistory(id, "Korrektur -1", user, updates);
-            } else if (type === 'RESET') {
-                const p = prompt("Admin PW:");
-                const snap = await db.ref('adminConfig/wpResetPassword').once('value');
-                if (p === snap.val()) {
-                    updates[`maintenanceState/agieOffsets/${id}`] = (localState.agieOffsets[id] || 0) + 216000;
-                    updates[`maintenanceState/extraCycles/${id}`] = 0;
-                    pushHistory(id, "WP-RESET", user, updates);
-                }
-            }
-        }
-
-        function pushHistory(id, ev, user, obj) {
-            const key = db.ref('maintenanceState/history').push().key, now = new Date();
-            obj[`maintenanceState/history/${key}`] = { Agie: id, Ereignis: ev, Benutzer: user, Zeit: now.toLocaleString('de-DE'), ISO: now.toISOString() };
-            db.ref().update(obj).then(() => showToast("Änderung gespeichert"));
-        }
-
-        // AUTH & LOGOUT
+        // AUTH
         auth.onAuthStateChanged(user => {
-            const pptBtn = document.getElementById('btnShowPresentation');
-            if (user) {
-                document.getElementById('btnLogin').innerHTML = "🔓 Abmelden";
-                document.getElementById('userStatus').innerText = "Angemeldet: " + (user.displayName || user.email);
-                pptBtn.style.display = "block";
-                startTimer();
-            } else {
-                document.getElementById('btnLogin').innerHTML = "🔑 Anmelden";
-                document.getElementById('userStatus').innerText = "Nur Lesemodus";
-                pptBtn.style.display = "none";
-                stopTimer();
-            }
+            document.getElementById('btnLogin').innerHTML = user ? "🔓 Logout" : "🔑 Login";
             refreshUI();
+            if(user) startTimer(); else stopTimer();
         });
 
-        function startTimer() {
-            if (logoutTimer) clearTimeout(logoutTimer);
-            if (countdownInterval) clearInterval(countdownInterval);
-            remainingSeconds = 20;
-            document.getElementById('logoutDisplay').style.display = "block";
-            countdownInterval = setInterval(() => {
-                remainingSeconds--;
-                document.getElementById('secondsLeft').innerText = remainingSeconds;
-                if(remainingSeconds <= 5) document.getElementById('logoutDisplay').classList.add('timer-warning');
-                else document.getElementById('logoutDisplay').classList.remove('timer-warning');
-                if(remainingSeconds <= 0) auth.signOut();
-            }, 1000);
-            logoutTimer = setTimeout(() => auth.signOut(), 20000);
+        function showAuth() {
+            if(auth.currentUser) { auth.signOut(); return; }
+            const e = prompt("Email:"), p = prompt("PW:");
+            if(e && p) auth.signInWithEmailAndPassword(e, p);
         }
-        function stopTimer() { clearInterval(countdownInterval); clearTimeout(logoutTimer); document.getElementById('logoutDisplay').style.display = "none"; }
-        window.onclick = () => { if(auth.currentUser) startTimer(); };
 
-        // DATA SYNC
+        // PPT LOGIC
+        function openPPT() { 
+            document.getElementById('pptOverlay').style.display = "flex"; 
+            currentSlide = 1; 
+            updateSlides(); 
+        }
+        function closePPT() { document.getElementById('pptOverlay').style.display = "none"; }
+        function changeSlide(n) { 
+            currentSlide += n; 
+            if(currentSlide < 1) currentSlide = 1; 
+            if(currentSlide > 2) currentSlide = 2; 
+            updateSlides(); 
+        }
+        function updateSlides() {
+            document.querySelectorAll('.ppt-slide').forEach((s, i) => s.classList.toggle('active', (i+1) === currentSlide));
+        }
+
+        // TIMER & DATA
+        function startTimer() { document.getElementById('logoutDisplay').style.display = "block"; }
+        function stopTimer() { document.getElementById('logoutDisplay').style.display = "none"; }
+        
         db.ref('maintenanceState').on('value', snap => {
             const v = snap.val();
             if (v) {
                 localState.cloudRawData = v.cloudRawData || [];
                 localState.extraCycles = v.extraCycles || {};
                 localState.agieOffsets = v.agieOffsets || {};
-                localState.history = v.history ? Object.values(v.history) : [];
                 refreshUI();
             }
         });
-
-        // HELPERS
-        function showAuth() {
-            if(auth.currentUser) { auth.signOut(); return; }
-            const e = prompt("Email:"), p = prompt("PW:");
-            if(e && p) auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message));
-        }
-        function openPPT() { document.getElementById('pptOverlay').style.display = "flex"; currentSlide = 1; updatePPT(); }
-        function closePPT() { document.getElementById('pptOverlay').style.display = "none"; }
-        function changeSlide(n) { currentSlide += n; if(currentSlide<1) currentSlide=1; if(currentSlide>4) currentSlide=4; updatePPT(); }
-        function updatePPT() { document.querySelectorAll('.ppt-slide').forEach((s, i) => s.classList.toggle('active', (i+1) === currentSlide)); }
-        function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = "block"; setTimeout(() => t.style.display="none", 3000); }
-        function triggerImport() { if(auth.currentUser) alert("Import-Funktion bereit..."); }
-        async function exportCSV() { if(!auth.currentUser) return; const p = prompt("Export-PW:"); const snap = await db.ref('adminConfig/exportPassword').once('value'); if(p === snap.val()) alert("CSV-Export startet..."); }
     </script>
 </body>
 </html>
