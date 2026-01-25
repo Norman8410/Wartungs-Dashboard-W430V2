@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V9.8.5 History-Fix</title>
+    <title>Agie Wartung - Bosch V9.8.6 Complete</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -86,10 +86,10 @@
         </div>
     </div>
 
-<div id="helpModal" class="modal-overlay">
+    <div id="helpModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="document.getElementById('helpModal').style.display='none'">&times;</span>
-            <h2 style="color:var(--bosch-blue); border-bottom: 2px solid var(--bosch-red); padding-bottom: 10px; margin-top:0;">🛠 Handbuch & System-Logik (V9.8.3)</h2>
+            <h2 style="color:var(--bosch-blue); border-bottom: 2px solid var(--bosch-red); padding-bottom: 10px; margin-top:0;">🛠 Handbuch & System-Logik (V9.8.6)</h2>
             
             <div class="help-section">
                 <h4>📋 Digitaler Wartungsplan</h4>
@@ -105,7 +105,7 @@
 
             <div class="help-section">
                 <h4>🔐 Cloud-Sicherheit & Automatik</h4>
-                <p><b>Auto-Logout:</b> Um unbefugte Änderungen an offenen Terminals zu verhindern, wird jeder Benutzer nach <b>20 Sekunden Inaktivität</b> automatisch abgemeldet.<br>
+                <p><b>Auto-Logout:</b> Um unbefugte Änderungen an offenen Terminals zu verhindern, wird jeder Benutzer nach <b>20 Sekunden Inaktivität</b> automatisch abgemeldet. Ein Live-Countdown oben rechts zeigt die Restzeit.<br>
                 <b>Einladungscode:</b> Zur Registrierung neuer Konten wird ein gültiger Einladungscode benötigt. Dieser wird zentral durch die Administratoren vergeben.</p>
             </div>
 
@@ -120,6 +120,18 @@
             </div>
 
             <button class="nav-btn btn-primary" style="width:100%; justify-content:center; margin-top:10px" onclick="document.getElementById('helpModal').style.display='none'">Verstanden & Schließen</button>
+        </div>
+    </div>
+
+    <div class="top-bar"></div>
+    <div class="header">
+        <div class="bosch-brand">BOSCH<span> AGIE</span></div>
+        <div class="status-area">
+            <div id="logoutDisplay" class="logout-timer">Logout in: <span id="secondsLeft">20</span>s</div>
+            <div class="status-badge">
+                <div id="connDot" class="status-dot offline"></div>
+                <span id="connText">Verbinde...</span>
+            </div>
         </div>
     </div>
 
@@ -174,7 +186,6 @@
         function resetLogoutTimer() {
             if (logoutTimer) clearTimeout(logoutTimer);
             if (countdownInterval) clearInterval(countdownInterval);
-            
             if (auth.currentUser) {
                 remainingSeconds = 20;
                 document.getElementById('logoutDisplay').style.display = 'block';
@@ -203,17 +214,15 @@
         db.ref('.info/connected').on('value', snap => {
             const connected = snap.val();
             document.getElementById('connDot').className = connected ? 'status-dot online' : 'status-dot offline';
-            document.getElementById('connText').innerText = connected ? 'Online V9.8.5' : 'Offline';
+            document.getElementById('connText').innerText = connected ? 'Online V9.8.6' : 'Offline';
         });
 
-        // --- HISTORY & STATE LISTENER ---
         db.ref('maintenanceState').on('value', snap => {
             const val = snap.val();
             if (val) {
                 localState.cloudRawData = val.cloudRawData || [];
                 localState.extraCycles = val.extraCycles || {};
                 localState.agieOffsets = val.agieOffsets || {};
-                // Sicherstellen, dass die History korrekt als Array verarbeitet wird
                 localState.history = val.history ? Object.values(val.history) : []; 
                 refreshUI();
             }
@@ -258,7 +267,7 @@
                 else if (diff < 500) { statusClass = "status-red"; color = "#d50000"; } 
                 else if (diff < 5000) { statusClass = "status-yellow"; color = "#ffcf00"; }
                 const pkgName = packages[Math.abs(cycles) % packages.length];
-                return { id, diff, ist, cycles, statusClass, color, pkgName, rawParts };
+                return { id, diff, ist, cycles, statusClass, color, pkgName };
             }).filter(x => x !== null).sort((a, b) => a.diff - b.diff);
         }
 
@@ -266,19 +275,10 @@
             const data = calculateMetrics();
             renderChart(data);
             renderList(data);
-            
-            // --- FIX: LETZTE AKTIVITÄT FINDEN ---
             if (localState.history && localState.history.length > 0) {
-                const sortedHistory = [...localState.history].sort((a, b) => {
-                    return new Date(b.ISO || 0) - new Date(a.ISO || 0);
-                });
-                const last = sortedHistory[0];
-                if (last) {
-                    document.getElementById('lastActionText').innerHTML = 
-                        `Letzte Änderung: <b>A${last.Agie}</b> (${last.Ereignis}) am ${last.Zeit.split(',')[0]}`;
-                }
-            } else {
-                document.getElementById('lastActionText').innerText = "Keine Aktivitäten verzeichnet.";
+                const sorted = [...localState.history].sort((a, b) => new Date(b.ISO || 0) - new Date(a.ISO || 0));
+                const last = sorted[0];
+                if (last) document.getElementById('lastActionText').innerHTML = `Letzte Änderung: <b>A${last.Agie}</b> (${last.Ereignis}) am ${last.Zeit.split(',')[0]}`;
             }
         }
 
@@ -302,7 +302,7 @@
                     <button class="btn-icon btn-plus" ${canPlus ? '' : 'disabled'} onclick="performAction('${d.id}', 'PLUS')">+</button>
                 </div>`;
             });
-            container.innerHTML = html || '<div style="padding:20px; text-align:center; color:#999">Warte auf Daten...</div>';
+            container.innerHTML = html;
         }
 
         function renderChart(data) {
@@ -318,21 +318,11 @@
                     type: 'bar',
                     data: {
                         labels: labels,
-                        datasets: [{
-                            data: data.map(d => d.diff),
-                            backgroundColor: data.map(d => d.color),
-                            borderRadius: 4, barPercentage: 0.7
-                        }]
+                        datasets: [{ data: data.map(d => d.diff), backgroundColor: data.map(d => d.color), borderRadius: 4, barPercentage: 0.7 }]
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            datalabels: {
-                                anchor: 'end', align: 'top', color: '#333', font: { weight: 'bold' }, rotation: -90, 
-                                formatter: (val) => val.toLocaleString()
-                            }
-                        },
+                        plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', color: '#333', font: { weight: 'bold' }, rotation: -90, formatter: (val) => val.toLocaleString() } },
                         scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
                     }
                 });
@@ -344,12 +334,10 @@
             resetLogoutTimer();
             const user = auth.currentUser.displayName || auth.currentUser.email;
             const updates = {};
-            
             if (type === 'PLUS' || type === 'MINUS') {
                 if (type === 'PLUS' && !confirm(`Wartung (+16.000) für A${id} buchen?`)) return;
                 const delta = type === 'PLUS' ? 1 : -1;
-                const currentCycles = localState.extraCycles[id] || 0;
-                updates[`maintenanceState/extraCycles/${id}`] = Math.max(0, currentCycles + delta);
+                updates[`maintenanceState/extraCycles/${id}`] = Math.max(0, (localState.extraCycles[id] || 0) + delta);
                 pushHistory(id, `Zähler ${delta>0?'+1':'-1'}`, user, updates);
             } else if (type === 'RESET') {
                 const pass = prompt(`Admin-Passwort für A${id} Reset:`);
@@ -366,13 +354,7 @@
         function pushHistory(id, event, user, updatesObj) {
             const key = db.ref('maintenanceState/history').push().key;
             const now = new Date();
-            updatesObj[`maintenanceState/history/${key}`] = { 
-                Agie: id, 
-                Ereignis: event, 
-                Benutzer: user, 
-                Zeit: now.toLocaleString('de-DE'), 
-                ISO: now.toISOString() 
-            };
+            updatesObj[`maintenanceState/history/${key}`] = { Agie: id, Ereignis: event, Benutzer: user, Zeit: now.toLocaleString('de-DE'), ISO: now.toISOString() };
             db.ref().update(updatesObj).then(() => showToast("✅ Gespeichert")).catch(e => showToast(e.message, "error"));
         }
 
