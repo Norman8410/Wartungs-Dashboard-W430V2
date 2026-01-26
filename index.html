@@ -359,7 +359,10 @@
             if (!auth.currentUser) return;
             resetLogoutTimer();
             const user = auth.currentUser.displayName || auth.currentUser.email;
-            const metrics = calculateMetrics().find(m => m.id === id);
+            
+            // FIX: Verwendung von '==' statt '===', da id aus HTML ein String ist, aber in den Daten oft eine Zahl
+            const metrics = calculateMetrics().find(m => m.id == id);
+            
             const updates = {};
 
             if (type === 'PLUS') {
