@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V9.9 Secure</title>
+    <title>Agie Wartung - Bosch V10.1</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -24,12 +24,13 @@
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .action-bar { padding: 10px 30px; display: flex; gap: 12px; align-items: center; background: var(--bosch-gray); }
         .nav-btn { padding: 8px 16px; cursor: pointer; border: 1px solid #bfc0c2; background: white; font-weight: 700; color: var(--bosch-blue); border-radius: 2px; font-size: 13px; }
+        .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .btn-primary { background: var(--bosch-blue); color: white; }
         .btn-active { background: var(--bosch-green) !important; color: white !important; }
         .main-layout { display: flex; flex: 1; padding: 10px 30px 20px 30px; gap: 20px; overflow: hidden; }
         .content-area { flex: 3; display: flex; flex-direction: column; gap: 15px; overflow: hidden; }
         .sidebar { flex: 1.2; background: white; border-top: 4px solid var(--bosch-light-blue); overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .chart-container { background: white; padding: 15px; border-top: 4px solid var(--bosch-blue); flex: 1; position: relative; }
+        .chart-container { background: white; padding: 25px 15px 15px 15px; border-top: 4px solid var(--bosch-blue); flex: 1; position: relative; }
         .activity-bar { background: white; padding: 10px 15px; font-size: 13px; color: #555; display: flex; justify-content: space-between; }
         .control-row { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f0f0f0; border-left: 6px solid #ccc; gap: 10px; }
         .status-red { border-left-color: var(--bosch-red); background: #fff5f5; }
@@ -60,6 +61,16 @@
         </div>
     </div>
 
+    <div id="helpModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color:var(--bosch-blue)">Hilfe V10.1</h2>
+            <p><b>Export:</b> Nur für angemeldete Benutzer aktiv. Erstellt ein CSV der Historie inklusive Export-Protokollzeile.</p>
+            <p><b>WP Reset:</b> Setzt den Offset auf 216k zurück. Passwortgeschützt.</p>
+            <p><b>Balkendiagramm:</b> Die Zahlen über den Balken zeigen die Reststückzahlen (gedreht zur besseren Lesbarkeit).</p>
+            <button class="nav-btn btn-primary" style="width:100%" onclick="document.getElementById('helpModal').style.display='none'">Schließen</button>
+        </div>
+    </div>
+
     <div class="top-bar"></div>
     <div class="header">
         <div class="bosch-brand">BOSCH<span> AGIE</span></div>
@@ -71,8 +82,9 @@
 
     <div class="action-bar">
         <button id="btnLogin" class="nav-btn" onclick="document.getElementById('authModal').style.display='flex'">🔑 Anmelden</button>
-        <button class="nav-btn btn-primary" onclick="triggerImport()">📥 JSON Import</button>
-        <button class="nav-btn" onclick="exportCSV()">📊 Export</button>
+        <button id="btnImport" class="nav-btn btn-primary" onclick="triggerImport()" disabled>📥 JSON Import</button>
+        <button id="btnExport" class="nav-btn" onclick="exportCSV()" disabled>📊 Export</button>
+        <button class="nav-btn" onclick="document.getElementById('helpModal').style.display='flex'">❓ Hilfe</button>
     </div>
     <input type="file" id="fileInput" style="display:none" accept=".json">
 
@@ -112,19 +124,16 @@
 
         const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
 
-        // Zentrale Passwort-Prüfung gegen Firebase-Hash
         async function checkAdminPassword(input) {
             if (!input) return false;
             const snap = await db.ref('adminConfig/masterHash').once('value');
             const targetHash = snap.val();
-            
             const msgBuffer = new TextEncoder().encode(input);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
             const hex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
             return hex === targetHash;
         }
 
-        // Auto-Logout Logik
         function resetLogoutTimer() {
             if (logoutTimer) clearTimeout(logoutTimer);
             if (countdownInterval) clearInterval(countdownInterval);
@@ -142,7 +151,6 @@
         }
         ['mousedown', 'mousemove', 'keypress'].forEach(e => window.addEventListener(e, resetLogoutTimer));
 
-        // Firebase Sync
         db.ref('maintenanceState').on('value', snap => {
             const val = snap.val() || {};
             localState = {
@@ -152,18 +160,22 @@
                 history: val.history ? Object.values(val.history) : []
             };
             refreshUI();
-            document.getElementById('connText').innerText = "Online V9.9";
+            document.getElementById('connText').innerText = "Online V10.1";
         });
 
         auth.onAuthStateChanged(user => {
             const btn = document.getElementById('btnLogin');
+            const btnEx = document.getElementById('btnExport');
+            const btnIm = document.getElementById('btnImport');
             if (user) {
                 btn.innerHTML = "🔓 Logout"; btn.classList.add('btn-active');
                 btn.onclick = () => auth.signOut();
+                btnEx.disabled = false; btnIm.disabled = false;
                 resetLogoutTimer();
             } else {
                 btn.innerHTML = "🔑 Login"; btn.classList.remove('btn-active');
                 btn.onclick = () => document.getElementById('authModal').style.display='flex';
+                btnEx.disabled = true; btnIm.disabled = true;
                 document.getElementById('logoutDisplay').style.display='none';
             }
             refreshUI();
@@ -209,7 +221,20 @@
                 chartInstance = new Chart(ctx, {
                     type: 'bar',
                     data: { labels: data.map(d => "A"+d.id), datasets: [{ data: data.map(d => d.diff), backgroundColor: data.map(d => d.color) }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top' } } }
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { display: false }, 
+                            datalabels: { 
+                                anchor: 'end', 
+                                align: 'top', 
+                                rotation: -90, 
+                                offset: 10,
+                                font: { weight: 'bold', size: 11 } 
+                            } 
+                        },
+                        scales: { y: { beginAtZero: true, grace: '15%' } }
+                    }
                 });
             }
         }
@@ -224,7 +249,7 @@
                 updates[`maintenanceState/extraCycles/${id}`] = Math.max(0, (localState.extraCycles[id] || 0) - 1);
                 pushHistory(id, "Korrektur", user, updates);
             } else if (type === 'RESET') {
-                if (await checkAdminPassword(prompt("Admin-Passwort:"))) {
+                if (await checkAdminPassword(prompt("Sicherheits-Passwort für WP-RESET:"))) {
                     updates[`maintenanceState/agieOffsets/${id}`] = (localState.agieOffsets[id] || 0) + 216000;
                     updates[`maintenanceState/extraCycles/${id}`] = 0;
                     pushHistory(id, "WP-RESET", user, updates);
@@ -256,62 +281,22 @@
                 .catch(e => alert(e.message));
         }
 
-        // ... (Rest des Codes bleibt gleich bis zur Funktion exportCSV)
-        
-        async function exportCSV() {
-            // Zuerst prüfen, ob der User überhaupt eingeloggt ist (wegen der Firebase Rules)
-            if (!auth.currentUser) {
-                showToast("Bitte zuerst anmelden (🔑 Login)!", "error");
-                return;
-            }
-        
-            const input = prompt("Export-Passwort eingeben:");
-            if (!input) return;
-        
-            try {
-                if (await checkAdminPassword(input)) {
-                    if (localState.history.length === 0) return alert("Keine Daten vorhanden.");
-                    
-                    let csv = "\uFEFFDatum;Agie;Event;User\n";
-                    localState.history.forEach(h => csv += `${h.Zeit};${h.Agie};${h.Ereignis};${h.Benutzer}\n`);
-                    
-                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `Wartungslog_${new Date().toLocaleDateString()}.csv`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    showToast("📥 Export erfolgreich");
-                } else {
-                    alert("Falsches Passwort! Zugriff verweigert.");
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Fehler beim Abruf der Berechtigung: " + error.message);
-            }
-        }
-        
-        async function checkAdminPassword(input) {
-            if (!input) return false;
+        function exportCSV() {
+            if (!auth.currentUser) return;
+            const exporter = auth.currentUser.displayName || auth.currentUser.email;
+            const now = new Date().toLocaleString('de-DE');
             
-            // Holt den Hash aus Firebase adminConfig/masterHash
-            const snap = await db.ref('adminConfig/masterHash').once('value');
-            const targetHash = snap.val();
+            let csv = "\uFEFFDatum;Agie;Event;User\n";
+            localState.history.forEach(h => csv += `${h.Zeit};${h.Agie};${h.Ereignis};${h.Benutzer}\n`);
             
-            if (!targetHash) {
-                alert("Konfigurationsfehler: masterHash in Firebase fehlt!");
-                return false;
-            }
+            // Abschlusszeile für den Export selbst
+            csv += `${now};System;DATEI-EXPORT;${exporter}\n`;
             
-            // Hash des eingegebenen Passworts berechnen
-            const msgBuffer = new TextEncoder().encode(input);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            
-            return hex === targetHash;
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+            a.download = `Wartung_Export_${new Date().toLocaleDateString()}.csv`; 
+            a.click();
+            showToast("Export erstellt");
         }
 
         function triggerImport() { if(auth.currentUser) document.getElementById('fileInput').click(); }
