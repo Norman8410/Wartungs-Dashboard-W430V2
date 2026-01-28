@@ -256,14 +256,62 @@
                 .catch(e => alert(e.message));
         }
 
+        // ... (Rest des Codes bleibt gleich bis zur Funktion exportCSV)
+        
         async function exportCSV() {
-            if (await checkAdminPassword(prompt("Export-Passwort:"))) {
-                let csv = "\uFEFFDatum;Agie;Event;User\n";
-                localState.history.forEach(h => csv += `${h.Zeit};${h.Agie};${h.Ereignis};${h.Benutzer}\n`);
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-                a.download = "Wartung_Export.csv"; a.click();
-            } else alert("Zugriff verweigert");
+            // Zuerst prüfen, ob der User überhaupt eingeloggt ist (wegen der Firebase Rules)
+            if (!auth.currentUser) {
+                showToast("Bitte zuerst anmelden (🔑 Login)!", "error");
+                return;
+            }
+        
+            const input = prompt("Export-Passwort eingeben:");
+            if (!input) return;
+        
+            try {
+                if (await checkAdminPassword(input)) {
+                    if (localState.history.length === 0) return alert("Keine Daten vorhanden.");
+                    
+                    let csv = "\uFEFFDatum;Agie;Event;User\n";
+                    localState.history.forEach(h => csv += `${h.Zeit};${h.Agie};${h.Ereignis};${h.Benutzer}\n`);
+                    
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Wartungslog_${new Date().toLocaleDateString()}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    showToast("📥 Export erfolgreich");
+                } else {
+                    alert("Falsches Passwort! Zugriff verweigert.");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Fehler beim Abruf der Berechtigung: " + error.message);
+            }
+        }
+        
+        async function checkAdminPassword(input) {
+            if (!input) return false;
+            
+            // Holt den Hash aus Firebase adminConfig/masterHash
+            const snap = await db.ref('adminConfig/masterHash').once('value');
+            const targetHash = snap.val();
+            
+            if (!targetHash) {
+                alert("Konfigurationsfehler: masterHash in Firebase fehlt!");
+                return false;
+            }
+            
+            // Hash des eingegebenen Passworts berechnen
+            const msgBuffer = new TextEncoder().encode(input);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            return hex === targetHash;
         }
 
         function triggerImport() { if(auth.currentUser) document.getElementById('fileInput').click(); }
