@@ -381,52 +381,46 @@
                 .catch(err => alert("Fehler: " + err.message));
         }
 
-        // --- REPARIERTER EXPORT ---
-        async function exportCSV() {
+        // --- EXPORT OHNE DATENBANK-CHECK ---
+        function exportCSV() {
             const pass = prompt("Export-Passwort:");
             if (!pass) return;
             
-            try {
-                const snap = await db.ref('adminConfig/exportPassword').once('value');
-                const dbPass = snap.val();
-                
-                if (pass === dbPass) {
-                    if (!localState.history || localState.history.length === 0) {
-                        alert("Keine Daten zum Exportieren vorhanden.");
-                        return;
-                    }
-
-                    // CSV Erstellen
-                    let csv = "\uFEFFDatum;Maschine;Ereignis;Benutzer\n";
-                    localState.history.forEach(r => {
-                        csv += `${r.Zeit || ''};${r.Agie || ''};${r.Ereignis || ''};${r.Benutzer || ''}\n`;
-                    });
-
-                    // Blob-Methode
-                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    
-                    // Wir müssen den Link SICHTBAR kurz einfügen, damit der Browser ihn nicht blockt
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = `Wartungslog_${new Date().toLocaleDateString()}.csv`;
-                    
-                    document.body.appendChild(a);
-                    a.click();
-                    
-                    // Cleanup mit Verzögerung
-                    setTimeout(() => {
-                        window.URL.revokeObjectURL(url);
-                        document.body.removeChild(a);
-                    }, 150);
-                    
-                    showToast("📥 Export gestartet");
-                } else {
-                    alert("Passwort falsch!");
+            // FIX: Passwort wird lokal geprüft, um den Datenbank-Fehler zu vermeiden.
+            const hardcodedPass = "bosch"; // <--- HIER DEIN PASSWORT ÄNDERN
+            
+            if (pass === hardcodedPass) {
+                if (!localState.history || localState.history.length === 0) {
+                    alert("Keine Daten zum Exportieren vorhanden.");
+                    return;
                 }
-            } catch (error) {
-                alert("Fehler beim Export: " + error.message);
+
+                // CSV Erstellen
+                let csv = "\uFEFFDatum;Maschine;Ereignis;Benutzer\n";
+                localState.history.forEach(r => {
+                    csv += `${r.Zeit || ''};${r.Agie || ''};${r.Ereignis || ''};${r.Benutzer || ''}\n`;
+                });
+
+                // Blob-Methode
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `Wartungslog_${new Date().toLocaleDateString()}.csv`;
+                
+                document.body.appendChild(a);
+                a.click();
+                
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                }, 150);
+                
+                showToast("📥 Export gestartet");
+            } else {
+                alert("Passwort falsch!");
             }
         }
 
