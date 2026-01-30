@@ -31,7 +31,7 @@
 
         /* Ersetze den alten .top-bar und .header Code durch diesen: */
         .top-bar { 
-            height: 60px; /* Deutlich breiter für die Überschrift */
+            height: 50px; 
             width: 100%; 
             background: linear-gradient(90deg, 
                 #d50000 0%, #d50000 25%, 
@@ -40,18 +40,18 @@
                 #008a4f 75%, #008a4f 100%); 
             display: flex;
             align-items: center;
-            padding: 0 30px;
+            padding: 0 20px;
             box-sizing: border-box;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
         }
-
+        
         .header { 
             background: white; 
-            padding: 8px 30px; 
+            padding: 10px 20px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #ddd;
         }
 
         .bosch-brand { 
@@ -172,11 +172,27 @@
 
         .bar-title {
             color: white;
-            font-size: 22px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            font-size: 20px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .bosch-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .bosch-anchor {
+            width: 30px;
+            height: 30px;
+        }
+        
+        .bosch-text {
+            color: #d50000;
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -1px;
         }
     </style>
 </head>
@@ -203,15 +219,24 @@
     </div>
 
     <div class="top-bar">
+        <span style="color: white; font-size: 20px; font-weight: bold;">›</span>
         <div class="bar-title">Wartungsintervall Agie</div>
     </div>
     <div class="header">
-        <div class="bosch-brand">BOSCH</div>
-            <div style="display: flex; gap: 20px; align-items: center;">
-                <div id="timerDisplay" style="font-size: 13px; color: var(--bosch-red); font-weight: bold; display: none;"></div>
-                <div id="statusLabel" style="font-size: 13px; font-weight: bold; color: var(--bosch-green);">Online</div>
-                <button id="helpBtn" class="nav-btn" onclick="toggleHelp()" style="border-radius: 50%; width: 35px; height: 35px; padding: 0; font-size: 18px;">?</button>
-            </div>
+        <div class="bosch-logo-container">
+            <svg class="bosch-anchor" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="#999" stroke-width="8"/>
+                <circle cx="50" cy="50" r="15" fill="#999"/>
+                <rect x="45" y="20" width="10" height="60" fill="#999"/>
+                <rect x="25" y="45" width="50" height="10" fill="#999"/>
+            </svg>
+            <span class="bosch-text">BOSCH</span>
+        </div>
+        
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <div id="timerDisplay" style="font-size: 13px; color: var(--bosch-red); font-weight: bold; display: none;"></div>
+            <div id="statusLabel" style="font-size: 13px; font-weight: bold; color: #008a4f;">Online</div>
+            <button id="helpBtn" class="nav-btn" onclick="toggleHelp()" style="border-radius: 50%; width: 35px; height: 35px; padding: 0; font-size: 18px; background: #003a6c; color: white; border: none; cursor: pointer;">?</button>
         </div>
         <div style="position: absolute; right: 30px; top: 20px;">
             <button id="helpBtn" class="nav-btn" onclick="toggleHelp()" style="border-radius: 50%; width: 30px; height: 30px; padding: 0;">?</button>
