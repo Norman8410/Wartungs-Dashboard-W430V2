@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V10.6 (Fix)</title>
+    <title>Agie Wartung - Bosch V10.7 (Cloud-Auth Step 1)</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -83,7 +83,7 @@
 
     <div id="helpModal" class="modal-overlay">
         <div class="modal-content">
-            <h2 style="color:var(--bosch-blue); margin-top:0; border-bottom:2px solid var(--bosch-red); padding-bottom:10px">🛠 Systemhilfe Agie-Wartung V10.6</h2>
+            <h2 style="color:var(--bosch-blue); margin-top:0; border-bottom:2px solid var(--bosch-red); padding-bottom:10px">🛠 Systemhilfe Agie-Wartung V10.7</h2>
             
             <div class="help-grid">
                 <div class="help-box">
@@ -98,7 +98,7 @@
                 <div class="help-box">
                     <h4>⚙️ Bedienung & Zugriff</h4>
                     <p>
-                        <b>Einladungscode:</b> Bitte bei der Teamleitung erfragen.<br>
+                        <b>Einladungscode:</b> Verwaltet via Cloud.<br>
                         <b>Reset-Passwort:</b> Nur für Administrator.<br>
                         <b>Auto-Logout:</b> Erfolgt nach 20 Sek. Inaktivität.
                     </p>
@@ -154,7 +154,12 @@
     </div>
 
     <script>
-        const INVITE_CODE = "bosch2026";
+        // --- STEP 1: INVITE CODE MIGRATION ---
+        // Lokaler Fallback, falls Cloud leer ist (wird dann hochgeladen)
+        const DEFAULT_INVITE = "Bosch2026W430"; 
+        let cloudInviteCode = null; // Wird aus Firebase geladen
+
+        // Master Passwort bleibt vorerst noch lokal
         const MASTER_PASSWORD = "123"; 
 
         const firebaseConfig = {
@@ -177,6 +182,22 @@
         let logoutTimer = null, countdownInterval = null, remainingSeconds = 20;
 
         const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
+
+        // --- CLOUD CONFIG SYNC (NEU in V10.7) ---
+        db.ref('config').on('value', snap => {
+            const config = snap.val() || {};
+            
+            if (config.inviteCode) {
+                // Code existiert in Cloud -> Übernehmen
+                cloudInviteCode = config.inviteCode;
+                console.log("Cloud Invite Code geladen.");
+            } else {
+                // Code fehlt in Cloud -> Auto-Export des Defaults
+                console.log("Cloud Config leer. Exportiere Invite Code...");
+                db.ref('config/inviteCode').set(DEFAULT_INVITE);
+                cloudInviteCode = DEFAULT_INVITE;
+            }
+        });
 
         function resetLogoutTimer() {
             if (logoutTimer) clearTimeout(logoutTimer);
@@ -204,7 +225,7 @@
                 history: val.history ? Object.values(val.history) : []
             };
             refreshUI();
-            document.getElementById('connText').innerText = "Online V10.6";
+            document.getElementById('connText').innerText = "Online V10.7 (Cloud-Cfg)";
         });
 
         auth.onAuthStateChanged(user => {
@@ -325,8 +346,15 @@
             db.ref().update(updatesObj).then(() => showToast("💾 Cloud-Update erfolgreich"));
         }
 
+        // --- REGISTRIERUNG JETZT MIT CLOUD-CHECK ---
         async function performRegister() {
-            if (prompt("Einladungscode eingeben:") === INVITE_CODE) {
+            // Wir prüfen gegen die Variable, die aus der Cloud geladen wurde
+            if (!cloudInviteCode) {
+                alert("Verbindung zur Cloud wird noch hergestellt. Bitte kurz warten.");
+                return;
+            }
+
+            if (prompt("Einladungscode eingeben:") === cloudInviteCode) {
                 const e = document.getElementById('email').value, p = document.getElementById('pass').value;
                 const name = prompt("Anzeigename für Protokoll:");
                 if(!e || !p || !name) return alert("Alle Felder ausfüllen!");
@@ -354,34 +382,24 @@
             showToast("📥 Export erfolgreich");
         }
 
-        // --- UPLOAD LOGIC FIX V10.6 ---
         function triggerImport() { document.getElementById('fileInput').click(); }
         
         document.getElementById('fileInput').onchange = (e) => {
             if(!e.target.files[0]) return;
             const reader = new FileReader();
-            
             reader.onload = (ev) => {
                 try {
                     const rawData = JSON.parse(ev.target.result);
-                    
-                    // Validierung: Ist es wirklich ein Array?
-                    if (!Array.isArray(rawData)) {
-                        throw new Error("JSON muss eine Liste sein (Array)!");
-                    }
-                    
-                    // Senden an Firebase
+                    if (!Array.isArray(rawData)) throw new Error("JSON muss eine Liste sein (Array)!");
                     db.ref('maintenanceState/cloudRawData').set(rawData)
                         .then(() => showToast("✅ Daten importiert"))
                         .catch((err) => showToast("❌ Cloud Fehler: " + err.message, true));
-                        
                 } catch (err) {
-                    alert("Import fehlgeschlagen!\nGrund: " + err.message + "\n\nBitte prüfe die JSON-Datei.");
+                    alert("Import fehlgeschlagen!\nGrund: " + err.message);
                 }
             };
-            
             reader.readAsText(e.target.files[0]);
-            e.target.value = ''; // Reset Input damit man die gleiche Datei nochmal wählen kann
+            e.target.value = ''; 
         };
 
         function showToast(m, isError = false) {
