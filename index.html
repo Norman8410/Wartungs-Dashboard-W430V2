@@ -29,30 +29,19 @@
             overflow: hidden; 
         }
 
-        /* Der farbige "Like a Bosch" Balken */
         .top-bar { 
-            height: 45px; 
+            height: 8px; 
             width: 100%; 
-            background: linear-gradient(90deg, 
-                #d50000 0%, #d50000 25%, 
-                #003a6c 25%, #003a6c 50%, 
-                #00b5e2 50%, #00b5e2 75%, 
-                #008a4f 75%, #008a4f 100%); 
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            box-sizing: border-box;
+            background: linear-gradient(90deg, var(--bosch-red) 25%, var(--bosch-blue) 25%, var(--bosch-blue) 50%, var(--bosch-light-blue) 50%, var(--bosch-light-blue) 75%, var(--bosch-green) 75%); 
         }
-        
-        /* Die weiße Header-Zeile darunter */
+
         .header { 
             background: white; 
-            padding: 12px 20px; 
+            padding: 12px 30px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border-bottom: 1px solid #eee;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
         }
 
         .bosch-brand { 
@@ -170,54 +159,6 @@
             border-bottom: 1px solid #eee; 
             font-size: 12px; 
         }
-
-        .bar-title {
-            color: white;
-            font-size: 18px;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-        
-        .bosch-logo-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        /* Der präzise Bosch-Anker */
-        .bosch-anchor-svg {
-            width: 38px;
-            height: 38px;
-        }
-        
-        .bosch-text {
-            color: #d50000;
-            font-size: 26px;
-            font-weight: 800; /* Bosch Black Font Weight */
-            letter-spacing: -0.5px;
-            font-family: 'Segoe UI', Arial, sans-serif;
-        }
-        
-        #helpBtn {
-            border-radius: 50%; 
-            width: 35px; 
-            height: 35px; 
-            padding: 0; 
-            font-size: 18px; 
-            background: #003a6c; 
-            color: white; 
-            border: none; 
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-        
-        #helpBtn:hover {
-            background: #00569d;
-        }
     </style>
 </head>
 <body>
@@ -236,43 +177,30 @@
     <div id="adminModal" class="modal">
         <div class="modal-box">
             <h2 style="color:var(--bosch-red)">⚙️ Admin Korrektur</h2>
-            <p style="font-size: 11px;">Hier kann die Wartung korrigiert oder ein <b>WP-Reset verworfen</b> werden.</p>
+            <p style="font-size: 11px;">Korrekturen oder <b>WP-Reset verworfen</b> hier möglich.</p>
             <div id="adminActionsList" style="text-align:left;"></div>
             <button class="nav-btn btn-primary" style="width:100%; margin-top:20px" onclick="closeModal('adminModal')">Schließen</button>
         </div>
     </div>
 
-    <div class="top-bar">
-        <span style="color: white; font-size: 18px; font-weight: bold; opacity: 0.8;">›</span>
-        <div class="bar-title">Wartungsintervall Agie</div>
-    </div>
+    <div class="top-bar"></div>
     <div class="header">
-        <div class="bosch-logo-container">
-            <svg class="bosch-anchor-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="50" r="46" fill="none" stroke="#525f6b" stroke-width="6"/>
-                <circle cx="50" cy="50" r="10" fill="#525f6b"/>
-                <rect x="46" y="15" width="8" height="70" rx="1" fill="#525f6b"/>
-                <rect x="15" y="46" width="70" height="8" rx="1" fill="#525f6b"/>
-            </svg>
-            <span class="bosch-text">BOSCH</span>
-        </div>
-        
+        <div class="bosch-brand">BOSCH<span> AGIE</span></div>
         <div style="display: flex; gap: 20px; align-items: center;">
-            <div id="timerDisplay" style="font-size: 13px; color: var(--bosch-red); font-weight: bold; display: none;"></div>
-            <div id="statusLabel" style="font-size: 13px; font-weight: bold; color: #008a4f;">Online</div>
-            <button id="helpBtn" onclick="toggleHelp()">?</button>
+            <div id="timerDisplay" style="font-size: 12px; color: var(--bosch-red); font-weight: bold; display: none;"></div>
+            <div id="statusLabel" style="font-size: 12px; font-weight: bold;">Verbinde...</div>
+        </div>
+        <div style="position: absolute; right: 30px; top: 20px;">
+            <button id="helpBtn" class="nav-btn" onclick="toggleHelp()" style="border-radius: 50%; width: 30px; height: 30px; padding: 0;">?</button>
         </div>
 
         <div id="helpLoggedOut" class="modal">
             <div class="modal-box" style="text-align: left;">
                 <h2 style="color:var(--bosch-blue)">Anleitung: Registrierung</h2>
                 <hr>
-                <p><b>Login/Registrierung:</b></p>
-                <ol>
-                    <li>Klicken Sie oben auf <b>🔑 Login</b>.</li>
-                    <li>Wählen Sie <b>"Neu registrieren"</b>.</li>
-                    <li><b>Den Einladungscode erhalten Sie von Ihrem TL, FK oder Admin.</b></li>
-                </ol>
+                <p>1. Oben auf <b>🔑 Login</b> klicken.<br>
+                2. <b>"Neu registrieren"</b> wählen.<br>
+                3. <b>Den Einladungscode erhalten Sie von Ihrem TL, FK oder Admin.</b></p>
                 <p>Verantwortlicher: Norman Schultheis</p>
                 <button class="nav-btn btn-primary" style="width:100%" onclick="closeModal('helpLoggedOut')">Verstanden</button>
             </div>
@@ -280,13 +208,13 @@
         
         <div id="helpLoggedIn" class="modal">
             <div class="modal-box" style="text-align: left;">
-                <h2 style="color:var(--bosch-blue)">Funktionen & Diagramm</h2>
+                <h2 style="color:var(--bosch-blue)">Hilfe & Funktionen</h2>
                 <hr>
-                <p><b>📊 Das Balkendiagramm:</b> Zeigt den verbleibenden Rest bis zur nächsten Wartung an. Je kleiner der Balken, desto dringender die Wartung.</p>
-                <p><b>🔘 Buttons (+ / -):</b> Diese können nur gedrückt werden, wenn die entsprechende Stückzahl erreicht ist (Rest < 2000).</p>
-                <p><b>⚙️ WP-Reset:</b> Bestätigt den Austausch des Wartungsplanes an der Maschine. Hierfür wird das <b>Master-Passwort</b> benötigt.</p>
-                <p><b>📊 CSV-Export:</b> Lädt das Protokoll herunter. Erfordert ein <b>Admin-Passwort</b>.</p>
-                <p><b>🛠️ Admin-Bereich:</b> Ermöglicht Korrekturen. Hier kann ein <b>WP-Reset verworfen</b> werden.</p>
+                <p><b>Balkendiagramm:</b> Zeigt den Rest bis zur Wartung. Ein Hover zeigt Details zur Maschine.</p>
+                <p><b>Buttons (+/-):</b> Nur aktiv, wenn Stückzahlen erreicht sind (Rest < 2000).</p>
+                <p><b>WP-Reset:</b> Bestädigt einen austausches des Wartungsplanes. Erfordert <b>Master-PW</b>.</p>
+                <p><b>CSV-Export:</b> Protokoll-Download. Erfordert <b>Admin-PW</b>.</p>
+                <p><b>Admin:</b> Hier kann ein <b>WP-Reset verworfen</b> werden.</p>
                 <button class="nav-btn btn-primary" style="width:100%" onclick="closeModal('helpLoggedIn')">Schließen</button>
             </div>
         </div>
@@ -429,13 +357,11 @@
                     Zeit: new Date().toLocaleString(), Agie: "A"+id, Aktion: "WP-Reset", User: auth.currentUser.displayName, TS: Date.now()
                 };
                 await db.ref().update(updates);
-                alert("WP-Reset (Wartungsplan-Austausch) erfolgreich.");
             } else { alert("Passwort falsch!"); }
         }
 
         function openAdmin() {
             if(prompt("Admin-Passwort:") === String(cloudConfig.AdminPW)) openModal('adminModal');
-            else alert("Verweigert.");
         }
 
         function exportCSVWithAuth() {
@@ -462,19 +388,19 @@
         }
 
         async function clearPath(id, field) {
-            if(confirm("Diesen Schritt wirklich verwerfen/löschen?")) {
+            if(confirm("Diesen Schritt wirklich verwerfen?")) {
                 const path = field === 'cycles' ? `extraCycles/${id}` : `agieOffsets/${id}`;
                 await db.ref(`maintenanceState/${path}`).remove();
             }
         }
 
-function renderChart(data) {
+        function renderChart(data) {
             const ctx = document.getElementById('mainChart').getContext('2d');
             if(chart) chart.destroy();
             
             chart = new Chart(ctx, {
                 type: 'bar',
-                plugins: [ChartDataLabels], // Aktiviert die Beschriftung direkt am Balken
+                plugins: [ChartDataLabels],
                 data: {
                     labels: data.map(d => "A" + d.id),
                     datasets: [{
@@ -516,18 +442,12 @@ function renderChart(data) {
                             }
                         },
                         datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 5,
-                            rotation: -90, // 90° Drehung der Zahl
+                            anchor: 'end', align: 'top', offset: 5, rotation: -90,
                             formatter: (value) => value.toLocaleString(),
-                            font: { weight: 'bold', size: 12 },
-                            color: '#003a6c'
+                            font: { weight: 'bold', size: 12 }, color: '#003a6c'
                         }
                     },
-                    layout: {
-                        padding: { top: 60, bottom: 10 } // Mehr Platz oben für die gedrehten Zahlen
-                    }
+                    layout: { padding: { top: 60, bottom: 10 } }
                 }
             });
         }
