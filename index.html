@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     
     <style>
         :root { 
@@ -256,13 +257,67 @@
             }
         }
 
-        function renderChart(data) {
+function renderChart(data) {
             const ctx = document.getElementById('mainChart').getContext('2d');
             if(chart) chart.destroy();
+            
             chart = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: data.map(d => "A"+d.id), datasets: [{ data: data.map(d => d.rest), backgroundColor: data.map(d => d.color) }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                plugins: [ChartDataLabels], // Aktiviert die Beschriftung direkt am Balken
+                data: {
+                    labels: data.map(d => "A" + d.id),
+                    datasets: [{
+                        label: 'Reststückzahl',
+                        data: data.map(d => d.rest),
+                        backgroundColor: data.map(d => d.color),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: false,
+                            title: { display: true, text: 'Reststückzahl bis Wartung', font: { weight: 'bold' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#d50000',
+                            bodyColor: '#333',
+                            borderColor: '#ccc',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    const d = data[context.dataIndex];
+                                    return [
+                                        `Maschine: A${d.id}`,
+                                        `Reststückzahl bis Wartung: ${d.rest.toLocaleString()}`,
+                                        `Gesamtstückzahl seit Reset: ${d.ist.toLocaleString()}`,
+                                        `Paket ${d.pkg} offen`
+                                    ];
+                                }
+                            }
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 5,
+                            rotation: -90, // 90° Drehung der Zahl
+                            formatter: (value) => value.toLocaleString(),
+                            font: { weight: 'bold', size: 12 },
+                            color: '#003a6c'
+                        }
+                    },
+                    layout: {
+                        padding: { top: 60, bottom: 10 } // Mehr Platz oben für die gedrehten Zahlen
+                    }
+                }
             });
         }
 
