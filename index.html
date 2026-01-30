@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V10.5</title>
+    <title>Agie Wartung - Bosch V10.6 (Fix)</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -63,6 +63,7 @@
         .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 4000; display: flex; flex-direction: column; gap: 10px; }
         .toast { background: #333; color: white; padding: 12px 20px; border-radius: 4px; opacity: 0; transition: 0.3s; border-left: 4px solid var(--bosch-green); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .toast.show { opacity: 1; }
+        .toast-error { border-left-color: var(--bosch-red) !important; background: #440000 !important; }
     </style>
 </head>
 <body>
@@ -82,7 +83,7 @@
 
     <div id="helpModal" class="modal-overlay">
         <div class="modal-content">
-            <h2 style="color:var(--bosch-blue); margin-top:0; border-bottom:2px solid var(--bosch-red); padding-bottom:10px">🛠 Systemhilfe Agie-Wartung V10.5</h2>
+            <h2 style="color:var(--bosch-blue); margin-top:0; border-bottom:2px solid var(--bosch-red); padding-bottom:10px">🛠 Systemhilfe Agie-Wartung V10.6</h2>
             
             <div class="help-grid">
                 <div class="help-box">
@@ -153,7 +154,6 @@
     </div>
 
     <script>
-        // Passwörter sind hier im Code für die Funktion hinterlegt, aber nicht mehr in der Hilfe sichtbar.
         const INVITE_CODE = "bosch2026";
         const MASTER_PASSWORD = "123"; 
 
@@ -204,7 +204,7 @@
                 history: val.history ? Object.values(val.history) : []
             };
             refreshUI();
-            document.getElementById('connText').innerText = "Online V10.5";
+            document.getElementById('connText').innerText = "Online V10.6";
         });
 
         auth.onAuthStateChanged(user => {
@@ -263,21 +263,14 @@
 
         function renderChart(data) {
             const ctx = document.getElementById('mainChart').getContext('2d');
-            
-            // Konfiguration für den erweiterten Mouse-Over
             const tooltipOptions = {
                 callbacks: {
                     label: function(context) {
                         const d = data[context.dataIndex];
-                        return [
-                            ` Paket: ${d.pkg}`,
-                            ` Reststück: ${d.diff.toLocaleString()}`,
-                            ` Ist-Gesamt: ${d.ist.toLocaleString()}`,
-                            ` Zyklen erledigt: ${d.cycles}`
-                        ];
+                        return [` Paket: ${d.pkg}`, ` Reststück: ${d.diff.toLocaleString()}`, ` Ist-Gesamt: ${d.ist.toLocaleString()}`, ` Zyklen erledigt: ${d.cycles}`];
                     }
                 },
-                backgroundColor: 'rgba(0, 58, 108, 0.9)', // Bosch Blue
+                backgroundColor: 'rgba(0, 58, 108, 0.9)', 
                 titleFont: { size: 14, weight: 'bold' },
                 bodyFont: { size: 13 },
                 padding: 10,
@@ -288,7 +281,7 @@
                 chartInstance.data.labels = data.map(d => "A"+d.id);
                 chartInstance.data.datasets[0].data = data.map(d => d.diff);
                 chartInstance.data.datasets[0].backgroundColor = data.map(d => d.color);
-                chartInstance.options.plugins.tooltip = tooltipOptions; // Update Tooltip
+                chartInstance.options.plugins.tooltip = tooltipOptions;
                 chartInstance.update('none');
             } else {
                 chartInstance = new Chart(ctx, {
@@ -298,7 +291,7 @@
                         responsive: true, maintainAspectRatio: false, 
                         plugins: { 
                             legend: { display: false }, 
-                            tooltip: tooltipOptions, // Hier aktivieren
+                            tooltip: tooltipOptions,
                             datalabels: { anchor: 'end', align: 'top', rotation: -90, offset: 10, font: { weight: 'bold', size: 11 } } 
                         },
                         scales: { y: { beginAtZero: true, grace: '15%' } }
@@ -361,15 +354,41 @@
             showToast("📥 Export erfolgreich");
         }
 
+        // --- UPLOAD LOGIC FIX V10.6 ---
         function triggerImport() { document.getElementById('fileInput').click(); }
+        
         document.getElementById('fileInput').onchange = (e) => {
+            if(!e.target.files[0]) return;
             const reader = new FileReader();
-            reader.onload = (ev) => db.ref('maintenanceState/cloudRawData').set(JSON.parse(ev.target.result)).then(() => showToast("✅ Daten importiert"));
+            
+            reader.onload = (ev) => {
+                try {
+                    const rawData = JSON.parse(ev.target.result);
+                    
+                    // Validierung: Ist es wirklich ein Array?
+                    if (!Array.isArray(rawData)) {
+                        throw new Error("JSON muss eine Liste sein (Array)!");
+                    }
+                    
+                    // Senden an Firebase
+                    db.ref('maintenanceState/cloudRawData').set(rawData)
+                        .then(() => showToast("✅ Daten importiert"))
+                        .catch((err) => showToast("❌ Cloud Fehler: " + err.message, true));
+                        
+                } catch (err) {
+                    alert("Import fehlgeschlagen!\nGrund: " + err.message + "\n\nBitte prüfe die JSON-Datei.");
+                }
+            };
+            
             reader.readAsText(e.target.files[0]);
+            e.target.value = ''; // Reset Input damit man die gleiche Datei nochmal wählen kann
         };
 
-        function showToast(m) {
-            const t = document.createElement('div'); t.className = "toast show"; t.innerText = m;
+        function showToast(m, isError = false) {
+            const t = document.createElement('div'); 
+            t.className = "toast show"; 
+            if(isError) t.classList.add('toast-error');
+            t.innerText = m;
             document.getElementById('toastContainer').appendChild(t);
             setTimeout(() => { t.classList.remove('show'); setTimeout(()=>t.remove(), 300); }, 2500);
         }
