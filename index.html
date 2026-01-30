@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V12.7</title>
+    <title>Agie Wartung - Bosch V1.0</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -61,6 +61,12 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
+        .bosch-brand {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
         .bosch-text {
             color: #d50000;
             font-size: 30px;
@@ -68,6 +74,12 @@
             letter-spacing: -1.5px;
             font-family: 'Arial Black', Gadget, sans-serif;
             line-height: 1;
+        }
+
+        .version-tag {
+            color: #525f6b;
+            font-size: 14px;
+            font-weight: bold;
         }
         
         .main-layout { 
@@ -211,6 +223,7 @@
     <div class="header">
         <div class="bosch-brand">
             <span class="bosch-text">BOSCH</span>
+            <span class="version-tag">V1.0</span>
         </div>
         
         <div style="display: flex; gap: 20px; align-items: center;">
@@ -235,10 +248,10 @@
             <div class="modal-box" style="text-align: left;">
                 <h2 style="color:var(--bosch-blue)">Hilfe & Funktionen</h2>
                 <hr>
-                <p><b>Balkendiagramm:</b> Zeigt den Rest bis zur Wartung. Ein Hover zeigt Details zur Maschine.</p>
-                <p><b>Buttons (+/-):</b> Nur aktiv, wenn Stückzahlen erreicht sind (Rest < 2000).</p>
-                <p><b>WP-Reset:</b> Bestätigt einen Austausch des Wartungsplanes an der Maschine. Erfordert <b>Master-Passwort</b>.</p>
-                <p><b>CSV-Export:</b> Protokoll-Download. Erfordert <b>Admin-Passwort</b>.</p>
+                <p><b>📊 Das Balkendiagramm:</b> Zeigt den verbleibenden Rest bis zur nächsten Wartung an. Ein Hover (Drüberfahren) zeigt detaillierte Stückzahlen und das offene Paket.</p>
+                <p><b>🔘 Buttons (+ / -):</b> Diese können nur gedrückt werden, wenn die entsprechende Stückzahl erreicht ist (Rest < 2000).</p>
+                <p><b>⚙️ WP-Reset:</b> Bestädigt einen austausches des Wartungsplanes an der Maschine. Hierfür wird das <b>Master-Passwort</b> benötigt.</p>
+                <p><b>📊 CSV-Export:</b> Lädt das Protokoll herunter. Erfordert ein <b>Admin-Passwort</b>.</p>
                 <p><b>🛠️ Admin-Bereich:</b> Ermöglicht Korrekturen. Hier kann ein <b>WP-Reset verworfen</b> werden.</p>
                 <button class="nav-btn btn-primary" style="width:100%" onclick="closeModal('helpLoggedIn')">Schließen</button>
             </div>
@@ -257,7 +270,7 @@
         <div class="sidebar" id="machineList"></div>
     </div>
 
-    <div class="footer">Verantwortlicher Norman Schultheis</div>
+    <div class="footer">Verantwortlicher Norman Schultheis | Agie Wartung V1.0</div>
 
     <input type="file" id="fileInput" style="display:none" accept=".json">
 
@@ -380,7 +393,7 @@
                     Zeit: new Date().toLocaleString(), Agie: "A"+id, Aktion: "WP-Reset", User: auth.currentUser.displayName, TS: Date.now()
                 };
                 await db.ref().update(updates);
-                alert("WP-Reset erfolgreich.");
+                alert("WP-Reset erfolgreich gespeichert.");
             } else { alert("Passwort falsch!"); }
         }
 
