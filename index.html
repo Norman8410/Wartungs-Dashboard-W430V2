@@ -63,6 +63,39 @@
         <div id="timerDisplay" style="font-size: 12px; color: var(--bosch-red); font-weight: bold; display: none;"></div>
         <div id="statusLabel" style="font-size: 12px; font-weight: bold;">Verbinde...</div>
     </div>
+    <div style="position: absolute; right: 30px; top: 20px;">
+    <button id="helpBtn" class="nav-btn" onclick="toggleHelp()" style="border-radius: 50%; width: 30px; height: 30px; padding: 0;">?</button>
+</div>
+
+    <div id="helpLoggedOut" class="modal">
+        <div class="modal-box" style="text-align: left; width: 450px;">
+            <h2 style="color:var(--bosch-blue)">Anleitung: Registrierung</h2>
+            <hr>
+            <p>Um Wartungen zu buchen, müssen Sie sich einmalig registrieren:</p>
+            <ol>
+                <li>Klicken Sie oben auf <b>🔑 Login</b>.</li>
+                <li>Wählen Sie im Fenster <b>"Neu registrieren"</b>.</li>
+                <li>Geben Sie Ihre E-Mail und ein gewünschtes Passwort ein.</li>
+                <li>Sie werden nach dem <b>Einladungscode</b> gefragt. Dieser lautet: <b style="color:var(--bosch-red)">bosch2026</b></li>
+                <li>Geben Sie zum Abschluss Ihren <b>Namen</b> an (dieser erscheint im Protokoll).</li>
+            </ol>
+            <button class="nav-btn btn-primary" style="width:100%" onclick="closeModal('helpLoggedOut')">Verstanden</button>
+        </div>
+    </div>
+    
+    <div id="helpLoggedIn" class="modal">
+        <div class="modal-box" style="text-align: left; width: 500px;">
+            <h2 style="color:var(--bosch-blue)">Steuerung & Funktionen</h2>
+            <hr>
+            <p><b>Wartung buchen (+):</b> Erscheint, wenn Rest < 2000. Setzt den Zähler auf 16.000 (bzw. addiert 16.000 bei Verzug).</p>
+            <p><b>Korrektur (-):</b> Zieht ein Paket (16.000 Stück) ab, falls versehentlich falsch gebucht wurde.</p>
+            <p><b>WP-Reset:</b> Für die große Vollwartung (nach 216.000 Stück). Erfordert das <b>Master-Passwort</b>.</p>
+            <p><b>⚙️ Admin:</b> Erlaubt das Löschen von Zyklen oder Offsets in der Datenbank. Erfordert das <b>Admin-Passwort</b>.</p>
+            <p><b>📊 CSV Protokoll:</b> Lädt die Historie aller Buchungen (Wer/Wann/Was) herunter. Erfordert ebenfalls das <b>Admin-Passwort</b>.</p>
+            <p><i>Hinweis: Nach 70 Sek. Inaktivität erfolgt ein automatischer Logout!</i></p>
+            <button class="nav-btn btn-primary" style="width:100%" onclick="closeModal('helpLoggedIn')">Schließen</button>
+        </div>
+    </div>
 </div>
 
     <div style="padding: 10px 20px; background: #f8f9fa; border-bottom: 1px solid #ddd; display: flex; gap: 10px; align-items: center;">
@@ -120,6 +153,7 @@
             const importBtn = document.getElementById('importBtn');
             const adminBtn = document.getElementById('adminBtn');
             const exportBtn = document.getElementById('exportBtn');
+            const helpBtn = document.getElementById('helpBtn'); // Diese Zeile neu!
 
             btn.innerText = user ? "🔓 Logout (" + (user.displayName || "User") + ")" : "🔑 Login";
             btn.onclick = user ? () => auth.signOut() : () => openModal('authModal');
@@ -133,9 +167,13 @@
             updateUI();
             if (user) {
                 resetLogoutTimer();
+                helpBtn.style.background = "var(--bosch-blue)"; // Blau wenn eingeloggt
+                helpBtn.style.color = "white";
             } else {
                 if (logoutTimer) clearTimeout(logoutTimer);
                 if (countdownInterval) clearInterval(countdownInterval);
+                helpBtn.style.background = "white"; // Weiß wenn ausgeloggt
+                helpBtn.style.color = "var(--bosch-blue)";
                 document.getElementById('timerDisplay').style.display = "none";
             }
         });
@@ -413,6 +451,13 @@
         document.addEventListener('mousedown', resetLogoutTimer);
         document.addEventListener('keypress', resetLogoutTimer);
         document.addEventListener('touchstart', resetLogoutTimer);
+        function toggleHelp() {
+        if (auth.currentUser) {
+            openModal('helpLoggedIn');
+        } else {
+            openModal('helpLoggedOut');
+        }
+    }
     </script>
 </body>
 </html>
