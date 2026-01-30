@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V11.5 (Threshold-Fix)</title>
+    <title>Agie Wartung - Bosch V11.6 (Admin-Security)</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -50,7 +50,8 @@
     <div id="adminModal" class="modal">
         <div class="modal-box">
             <h2 style="color:var(--bosch-red)">Admin-Bereich</h2>
-            <div id="adminActionsList" style="text-align:left; margin-top:20px"></div>
+            <p style="font-size:11px; margin-bottom:15px">Aktionen werden direkt in der Cloud korrigiert.</p>
+            <div id="adminActionsList" style="text-align:left;"></div>
             <button class="nav-btn btn-primary" style="width:100%; margin-top:20px" onclick="closeModal('adminModal')">Schließen</button>
         </div>
     </div>
@@ -88,14 +89,15 @@
         const db = firebase.database();
         const auth = firebase.auth();
 
-        let cloudConfig = { inviteCode: "", masterPassword: "" };
+        let cloudConfig = { inviteCode: "", AdminPW: "" };
         let state = { cloudRawData: [], extraCycles: {}, agieOffsets: {} };
         let chart = null;
 
+        // Synchronisation der Einstellungen aus der Firebase
         db.ref('config').on('value', snap => {
             if(snap.exists()) {
                 cloudConfig = snap.val();
-                document.getElementById('statusLabel').innerText = "V11.5 | Cloud Online";
+                document.getElementById('statusLabel').innerText = "V11.6 | Cloud Online";
                 document.getElementById('statusLabel').style.color = "green";
             }
         });
@@ -132,9 +134,7 @@
             const isLogged = !!auth.currentUser;
 
             list.innerHTML = data.map(d => {
-                // LOGIK: + Button nur aktiv wenn Rest < 2000 UND Buchung führt nicht über 16000
-                const plusEnabled = isLogged && d.rest < 2000 && (d.rest + 16000 <= 16500);
-                
+                const plusEnabled = isLogged && d.rest < 2000;
                 return `
                 <div class="control-row" style="border-left-color:${d.color}">
                     <div style="flex:1.5"><b>A${d.id}</b><br><small>${d.pkg}</small></div>
@@ -156,18 +156,21 @@
         }
 
         async function wpReset(id) {
-            const pw = prompt("Master-Passwort für A" + id + ":");
-            if(pw === cloudConfig.masterPassword) {
+            // Auch hier nutzen wir nun das neue AdminPW Feld
+            if(prompt("Admin-Passwort für WP-Reset A" + id + ":") === cloudConfig.AdminPW) {
                 const updates = {};
                 updates[`maintenanceState/agieOffsets/${id}`] = (state.agieOffsets[id] || 0) + 216000;
                 updates[`maintenanceState/extraCycles/${id}`] = 0;
                 await db.ref().update(updates);
-            } else { alert("Falsch!"); }
+            } else { alert("Passwort falsch!"); }
         }
 
         function openAdmin() {
-            if(prompt("Admin-Passwort:") === cloudConfig.masterPassword) openModal('adminModal');
-            else alert("Zugriff verweigert.");
+            if(prompt("Bitte Admin-Passwort eingeben:") === cloudConfig.AdminPW) {
+                openModal('adminModal');
+            } else { 
+                alert("Passwort ungültig. Zugriff verweigert."); 
+            }
         }
 
         function renderAdminList(data) {
@@ -176,14 +179,14 @@
                 <div class="admin-list-item">
                     <span><b>A${d.id}</b> (Zyklen: ${d.cycles})</span>
                     <div>
-                        <button onclick="clearPath('extraCycles/${d.id}')">Zyklen 0</button>
-                        <button onclick="clearPath('agieOffsets/${d.id}')">WP Reset weg</button>
+                        <button class="nav-btn" style="padding:2px 5px; font-size:10px" onclick="clearPath('extraCycles/${d.id}')">Zyklen 0</button>
+                        <button class="nav-btn" style="padding:2px 5px; font-size:10px" onclick="clearPath('agieOffsets/${d.id}')">WP Weg</button>
                     </div>
                 </div>`).join('');
         }
 
         async function clearPath(path) {
-            if(confirm("Löschen?")) await db.ref(`maintenanceState/${path}`).remove();
+            if(confirm("Eintrag in der Cloud löschen?")) await db.ref(`maintenanceState/${path}`).remove();
         }
 
         function renderChart(data) {
@@ -198,14 +201,17 @@
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
         async function performLogin() {
             try { await auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value); closeModal('authModal'); } catch(e) { alert(e.message); }
         }
+        
         async function performRegister() {
-            if(prompt("Code:") !== cloudConfig.inviteCode) return alert("Falsch!");
+            if(prompt("Einladungscode:") !== cloudConfig.inviteCode) return alert("Falsch!");
             const e = document.getElementById('email').value, p = document.getElementById('pass').value, n = prompt("Name:");
             try { const cred = await auth.createUserWithEmailAndPassword(e, p); await cred.user.updateProfile({ displayName: n }); closeModal('authModal'); } catch(e) { alert(e.message); }
         }
+
         function triggerImport() { document.getElementById('fileInput').click(); }
         document.getElementById('fileInput').onchange = (e) => {
             const reader = new FileReader();
