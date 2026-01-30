@@ -16,6 +16,7 @@
             --bosch-light-blue: #00b5e2; 
             --bosch-green: #008a4f; 
             --bosch-gray: #eff1f2;
+            --critical-red: #8b0000;
         }
 
         body { 
@@ -29,168 +30,56 @@
             overflow: hidden; 
         }
 
-        /* Der farbige "Like a Bosch" Balken */
         .top-bar { 
             height: 45px; 
             width: 100%; 
-            background: linear-gradient(90deg, 
-                #d50000 0%, #d50000 25%, 
-                #003a6c 25%, #003a6c 50%, 
-                #00b5e2 50%, #00b5e2 75%, 
-                #008a4f 75%, #008a4f 100%); 
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            box-sizing: border-box;
+            background: linear-gradient(90deg, #d50000 0%, #d50000 25%, #003a6c 25%, #003a6c 50%, #00b5e2 50%, #00b5e2 75%, #008a4f 75%, #008a4f 100%); 
+            display: flex; align-items: center; padding: 0 15px; box-sizing: border-box;
         }
 
-        .bar-title {
-            color: white;
-            font-size: 19px;
-            font-weight: 600;
-            margin-left: 10px;
-        }
+        .bar-title { color: white; font-size: 19px; font-weight: 600; margin-left: 10px; }
 
-        /* Der weiße Header-Bereich */
         .header { 
-            background: white; 
-            padding: 12px 25px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: white; padding: 12px 25px; display: flex; justify-content: space-between; 
+            align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .bosch-brand {
-            display: flex;
-            align-items: baseline;
-            gap: 8px;
-        }
-
-        .bosch-text {
-            color: #d50000;
-            font-size: 30px;
-            font-weight: 900;
-            letter-spacing: -1.5px;
-            font-family: 'Arial Black', Gadget, sans-serif;
-            line-height: 1;
-        }
-
-        .version-tag {
-            color: #525f6b;
-            font-size: 14px;
-            font-weight: bold;
-        }
+        .bosch-brand { display: flex; align-items: baseline; gap: 8px; }
+        .bosch-text { color: #d50000; font-size: 30px; font-weight: 900; letter-spacing: -1.5px; font-family: 'Arial Black', sans-serif; line-height: 1; }
+        .version-tag { color: #525f6b; font-size: 14px; font-weight: bold; }
         
-        .main-layout { 
-            display: flex; 
-            flex: 1; 
-            padding: 20px; 
-            gap: 20px; 
-            overflow: hidden; 
-        }
+        .main-layout { display: flex; flex: 1; padding: 20px; gap: 20px; overflow: hidden; }
+        .content { flex: 3; background: white; padding: 20px; border-top: 4px solid var(--bosch-blue); position: relative; }
+        .sidebar { flex: 1.5; background: white; border-top: 4px solid var(--bosch-light-blue); overflow-y: auto; padding: 10px; }
 
-        .content { 
-            flex: 3; 
-            background: white; 
-            padding: 20px; 
-            border-top: 4px solid var(--bosch-blue); 
-            position: relative; 
-        }
-
-        .sidebar { 
-            flex: 1.5; 
-            background: white; 
-            border-top: 4px solid var(--bosch-light-blue); 
-            overflow-y: auto; 
-            padding: 10px; 
-        }
-
-        .footer {
-            background: white;
-            padding: 10px 30px;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-            border-top: 1px solid #ddd;
-        }
+        .footer { background: white; padding: 10px 30px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; }
         
+        /* Seitenleiste Zeilen mit dickerem Rand */
         .control-row { 
-            display: flex; 
-            align-items: center; 
-            padding: 10px; 
-            border-bottom: 1px solid #eee; 
-            border-left: 5px solid #ccc; 
-            margin-bottom: 5px; 
-            gap: 8px; 
+            display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; 
+            border-left: 8px solid #ccc; margin-bottom: 5px; gap: 8px; 
         }
+
+        /* Pulsieren für Überfällige */
+        @keyframes pulse-red {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        .pulse { animation: pulse-red 1.5s infinite ease-in-out; }
 
         .nav-btn { 
-            padding: 6px 12px; 
-            cursor: pointer; 
-            border: 1px solid #ccc; 
-            background: white; 
-            font-weight: bold; 
-            color: var(--bosch-blue); 
-            font-size: 13px; 
-            border-radius: 2px; 
+            padding: 6px 12px; cursor: pointer; border: 1px solid #ccc; background: white; 
+            font-weight: bold; color: var(--bosch-blue); font-size: 13px; border-radius: 2px; 
         }
-
-        .nav-btn:disabled { 
-            opacity: 0.2; 
-            cursor: not-allowed; 
-            filter: grayscale(1); 
-        }
-
-        .btn-primary { 
-            background: var(--bosch-blue); 
-            color: white; 
-            border: none; 
-        }
-
-        .btn-wp { 
-            background: var(--bosch-red); 
-            color: white; 
-            border: none; 
-            font-size: 11px; 
-        }
+        .nav-btn:disabled { opacity: 0.2; cursor: not-allowed; filter: grayscale(1); }
+        .btn-primary { background: var(--bosch-blue); color: white; border: none; }
+        .btn-wp { background: var(--bosch-red); color: white; border: none; font-size: 11px; }
         
-        .modal { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0,0,0,0.7); 
-            display: none; 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 1000; 
-        }
-
-        .modal-box { 
-            background: white; 
-            padding: 30px; 
-            border-top: 8px solid var(--bosch-red); 
-            width: 500px; 
-            text-align: center; 
-            max-height: 85vh; 
-            overflow-y: auto; 
-        }
-
-        input { 
-            width: 100%; 
-            padding: 10px; 
-            margin: 10px 0; 
-            box-sizing: border-box; 
-            border: 1px solid #ddd; 
-        }
-
-        .admin-list-item { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 8px; 
-            border-bottom: 1px solid #eee; 
-            font-size: 12px; 
-        }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: white; padding: 30px; border-top: 8px solid var(--bosch-red); width: 500px; text-align: center; max-height: 85vh; overflow-y: auto; }
+        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; border: 1px solid #ddd; }
+        .admin-list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -225,7 +114,6 @@
             <span class="bosch-text">BOSCH</span>
             <span class="version-tag">V1.0</span>
         </div>
-        
         <div style="display: flex; gap: 20px; align-items: center;">
             <div id="timerDisplay" style="font-size: 13px; color: var(--bosch-red); font-weight: bold; display: none;"></div>
             <div id="statusLabel" style="font-size: 14px; font-weight: bold; color: #008a4f;">Online</div>
@@ -235,10 +123,7 @@
         <div id="helpLoggedOut" class="modal">
             <div class="modal-box" style="text-align: left;">
                 <h2 style="color:var(--bosch-blue)">Anleitung: Registrierung</h2>
-                <hr>
-                <p>1. Oben auf <b>🔑 Login</b> klicken.<br>
-                2. <b>"Neu registrieren"</b> wählen.<br>
-                3. <b>Den Einladungscode erhalten Sie von Ihrem TL, FK oder Admin.</b></p>
+                <hr><p>1. Oben auf <b>🔑 Login</b> klicken.<br>2. <b>"Neu registrieren"</b> wählen.<br>3. <b>Den Einladungscode erhalten Sie von Ihrem TL, FK oder Admin.</b></p>
                 <p>Verantwortlicher: Norman Schultheis</p>
                 <button class="nav-btn btn-primary" style="width:100%" onclick="closeModal('helpLoggedOut')">Verstanden</button>
             </div>
@@ -247,12 +132,9 @@
         <div id="helpLoggedIn" class="modal">
             <div class="modal-box" style="text-align: left;">
                 <h2 style="color:var(--bosch-blue)">Hilfe & Funktionen</h2>
-                <hr>
-                <p><b>📊 Das Balkendiagramm:</b> Zeigt den verbleibenden Rest bis zur nächsten Wartung an. Ein Hover (Drüberfahren) zeigt detaillierte Stückzahlen und das offene Paket.</p>
-                <p><b>🔘 Buttons (+ / -):</b> Diese können nur gedrückt werden, wenn die entsprechende Stückzahl erreicht ist (Rest < 2000).</p>
-                <p><b>⚙️ WP-Reset:</b> Bestädigt einen austausches des Wartungsplanes an der Maschine. Hierfür wird das <b>Master-Passwort</b> benötigt.</p>
-                <p><b>📊 CSV-Export:</b> Lädt das Protokoll herunter. Erfordert ein <b>Admin-Passwort</b>.</p>
-                <p><b>🛠️ Admin-Bereich:</b> Ermöglicht Korrekturen. Hier kann ein <b>WP-Reset verworfen</b> werden.</p>
+                <hr><p><b>📊 Balkendiagramm:</b> Farbauswahl nach Priorität (Grün, Orange, Hellrot, Dunkelrot).</p>
+                <p><b>⚙️ WP-Reset:</b> Bestätigt Wartungsplan-Tausch (Master-PW nötig).</p>
+                <p><b>🛠️ Admin:</b> Korrekturen und Verwerfen von Schritten.</p>
                 <button class="nav-btn btn-primary" style="width:100%" onclick="closeModal('helpLoggedIn')">Schließen</button>
             </div>
         </div>
@@ -271,7 +153,6 @@
     </div>
 
     <div class="footer">Verantwortlicher Norman Schultheis | Agie Wartung V1.0</div>
-
     <input type="file" id="fileInput" style="display:none" accept=".json">
 
     <script>
@@ -285,20 +166,14 @@
             appId: "1:211606405555:web:cc2475ca47804086a3cbc6"
         };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const auth = firebase.auth();
+        const db = firebase.database(), auth = firebase.auth();
 
         let cloudConfig = { inviteCode: "", AdminPW: "", masterPassword: "" };
         let state = { cloudRawData: [], extraCycles: {}, agieOffsets: {}, history: [] };
-        let chart = null;
-        let logoutTimer;
-        let countdownInterval;
+        let chart = null, logoutTimer, countdownInterval;
         const timeoutSeconds = 70;
 
-        db.ref('config').on('value', snap => {
-            if(snap.exists()) cloudConfig = snap.val();
-        });
-
+        db.ref('config').on('value', snap => { if(snap.exists()) cloudConfig = snap.val(); });
         db.ref('maintenanceState').on('value', snap => {
             const val = snap.val() || {};
             state.cloudRawData = val.cloudRawData || [];
@@ -309,29 +184,15 @@
         });
 
         auth.onAuthStateChanged(user => {
-            const btn = document.getElementById('authBtn');
-            const importBtn = document.getElementById('importBtn');
-            const adminBtn = document.getElementById('adminBtn');
-            const exportBtn = document.getElementById('exportBtn');
-            const helpBtn = document.getElementById('helpBtn');
-
+            const btn = document.getElementById('authBtn'), importBtn = document.getElementById('importBtn'),
+                  adminBtn = document.getElementById('adminBtn'), exportBtn = document.getElementById('exportBtn'),
+                  helpBtn = document.getElementById('helpBtn');
             btn.innerText = user ? "🔓 Logout (" + (user.displayName || "User") + ")" : "🔑 Login";
             btn.onclick = user ? () => auth.signOut() : () => openModal('authModal');
-            
-            const displayStyle = user ? "inline-block" : "none";
-            importBtn.style.display = displayStyle;
-            adminBtn.style.display = displayStyle;
-            exportBtn.style.display = displayStyle;
-            
-            if (user) {
-                resetLogoutTimer();
-                helpBtn.style.background = "var(--bosch-blue)";
-                helpBtn.style.color = "white";
-            } else {
-                stopLogoutTimer();
-                helpBtn.style.background = "white";
-                helpBtn.style.color = "var(--bosch-blue)";
-            }
+            const dS = user ? "inline-block" : "none";
+            importBtn.style.display = dS; adminBtn.style.display = dS; exportBtn.style.display = dS;
+            if (user) { resetLogoutTimer(); helpBtn.style.background = "var(--bosch-blue)"; helpBtn.style.color = "white"; }
+            else { stopLogoutTimer(); helpBtn.style.background = "white"; helpBtn.style.color = "var(--bosch-blue)"; }
             updateUI();
         });
 
@@ -342,26 +203,30 @@
                 const ist = (parseInt(item.Parts) || 0) - (state.agieOffsets[id] || 0);
                 const cycles = state.extraCycles[id] || 0;
                 const rest = (16000 + (cycles * 16000)) - ist;
-                let color = rest < 500 ? "#d50000" : (rest < 5000 ? "#ffcf00" : "#008a4f");
+                
+                // Neue Farblogik
+                let color = "#008a4f"; // Grün >= 2000
+                if (rest <= 0) color = "#8b0000"; // Dunkelrot überfällig
+                else if (rest < 500) color = "#ff4d4d"; // Hellrot < 500
+                else if (rest < 2000) color = "#ffa500"; // Orange < 2000
+
                 return { id, rest, color, ist, cycles, pkg: packages[cycles % packages.length] };
             }).sort((a,b) => a.rest - b.rest);
 
-            const list = document.getElementById('machineList');
-            const isLogged = !!auth.currentUser;
-
+            const list = document.getElementById('machineList'), isLogged = !!auth.currentUser;
             list.innerHTML = data.map(d => {
+                const isOverdue = d.rest <= 0;
                 const plusEnabled = isLogged && d.rest < 2000;
                 return `
-                <div class="control-row" style="border-left-color:${d.color}">
+                <div class="control-row ${isOverdue ? 'pulse' : ''}" style="border-left-color:${d.color}">
                     <div style="flex:1.5"><b>A${d.id}</b><br><small>${d.pkg}</small></div>
-                    <div style="flex:1; text-align:right; font-weight:bold; font-size:16px">${d.rest.toLocaleString()}</div>
+                    <div style="flex:1; text-align:right; font-weight:bold; font-size:16px; color:${isOverdue ? '#8b0000' : 'black'}">${d.rest.toLocaleString()}</div>
                     <button class="nav-btn btn-wp" ${isLogged && d.ist > 210000 ? '' : 'disabled'} onclick="wpReset('${d.id}')">WP</button>
                     <button class="nav-btn" ${isLogged && d.cycles > 0 ? '' : 'disabled'} onclick="changeCycle('${d.id}', -1)">-</button>
                     <div style="width:20px; text-align:center; font-weight:bold">${d.cycles}</div>
                     <button class="nav-btn" ${plusEnabled ? '' : 'disabled'} onclick="changeCycle('${d.id}', 1)">+</button>
                 </div>`;
             }).join('');
-            
             renderChart(data);
             renderAdminList(data);
         }
@@ -370,173 +235,75 @@
             const currentCycles = state.extraCycles[id] || 0;
             const item = state.cloudRawData.find(x => x.StationNo == id);
             const ist = (parseInt(item.Parts) || 0) - (state.agieOffsets[id] || 0);
-            let newCycles = currentCycles;
-            if (val > 0) {
-                const aktuellerRest = (16000 + (currentCycles * 16000)) - ist;
-                newCycles = aktuellerRest > 0 ? (16000 + ist) / 16000 - 1 : currentCycles + 1;
-            } else {
-                newCycles = Math.max(0, currentCycles - 1);
-            }
+            let newCycles = (val > 0) ? ( ((16000 + (currentCycles * 16000)) - ist) > 0 ? (16000 + ist) / 16000 - 1 : currentCycles + 1 ) : Math.max(0, currentCycles - 1);
             await db.ref(`maintenanceState/extraCycles/${id}`).set(newCycles);
-            await db.ref('maintenanceState/history').push({
-                Zeit: new Date().toLocaleString(), Agie: "A"+id, Aktion: val > 0 ? "Wartung" : "Korrektur", User: auth.currentUser.displayName, TS: Date.now()
-            });
+            await db.ref('maintenanceState/history').push({ Zeit: new Date().toLocaleString(), Agie: "A"+id, Aktion: val > 0 ? "Wartung" : "Korrektur", User: auth.currentUser.displayName, TS: Date.now() });
         }
 
         async function wpReset(id) {
-            const pwIn = prompt("Master-Passwort für WP-Reset (Austausch Wartungsplan) A" + id + ":");
-            if(pwIn === String(cloudConfig.masterPassword)) {
-                const updates = {};
-                updates[`maintenanceState/agieOffsets/${id}`] = (state.agieOffsets[id] || 0) + 216000;
-                updates[`maintenanceState/extraCycles/${id}`] = 0;
-                updates[`maintenanceState/history/${db.ref().push().key}`] = {
-                    Zeit: new Date().toLocaleString(), Agie: "A"+id, Aktion: "WP-Reset", User: auth.currentUser.displayName, TS: Date.now()
-                };
-                await db.ref().update(updates);
-                alert("WP-Reset erfolgreich gespeichert.");
-            } else { alert("Passwort falsch!"); }
+            if(prompt("Master-Passwort A" + id + ":") === String(cloudConfig.masterPassword)) {
+                const up = {}; up[`maintenanceState/agieOffsets/${id}`] = (state.agieOffsets[id] || 0) + 216000; up[`maintenanceState/extraCycles/${id}`] = 0;
+                up[`maintenanceState/history/${db.ref().push().key}`] = { Zeit: new Date().toLocaleString(), Agie: "A"+id, Aktion: "WP-Reset", User: auth.currentUser.displayName, TS: Date.now() };
+                await db.ref().update(up); alert("Erfolgreich.");
+            } else alert("Falsch!");
         }
 
-        function openAdmin() {
-            if(prompt("Admin-Passwort:") === String(cloudConfig.AdminPW)) openModal('adminModal');
-        }
-
+        function openAdmin() { if(prompt("Admin-Passwort:") === String(cloudConfig.AdminPW)) openModal('adminModal'); }
         function exportCSVWithAuth() {
-            if(prompt("Admin-Passwort für Export:") === String(cloudConfig.AdminPW)) {
+            if(prompt("Admin-Passwort:") === String(cloudConfig.AdminPW)) {
                 let csv = "\uFEFFDatum;Maschine;Aktion;Mitarbeiter\n";
                 state.history.sort((a,b) => b.TS - a.TS).forEach(h => { csv += `${h.Zeit};${h.Agie};${h.Aktion};${h.User}\n`; });
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-                link.download = `Protokoll_${new Date().toLocaleDateString()}.csv`;
-                link.click();
+                const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+                link.download = `Protokoll.csv`; link.click();
             }
         }
 
         function renderAdminList(data) {
-            const container = document.getElementById('adminActionsList');
-            container.innerHTML = data.map(d => `
-                <div class="admin-list-item">
-                    <span><b>A${d.id}</b></span>
-                    <div>
-                        <button class="nav-btn" style="padding:2px 5px; font-size:10px" onclick="clearPath('${d.id}', 'cycles')">Zyklen 0</button>
-                        <button class="nav-btn" style="padding:2px 5px; font-size:10px" onclick="clearPath('${d.id}', 'wp')">WP verworfen</button>
-                    </div>
-                </div>`).join('');
+            document.getElementById('adminActionsList').innerHTML = data.map(d => `
+                <div class="admin-list-item"><span><b>A${d.id}</b></span><div>
+                    <button class="nav-btn" style="padding:2px 5px; font-size:10px" onclick="clearP('${d.id}', 'cycles')">Zyklen 0</button>
+                    <button class="nav-btn" style="padding:2px 5px; font-size:10px" onclick="clearP('${d.id}', 'wp')">WP weg</button>
+                </div></div>`).join('');
         }
 
-        async function clearPath(id, field) {
-            if(confirm("Diesen Schritt wirklich verwerfen?")) {
-                const path = field === 'cycles' ? `extraCycles/${id}` : `agieOffsets/${id}`;
-                await db.ref(`maintenanceState/${path}`).remove();
-            }
-        }
+        async function clearP(id, f) { if(confirm("Verwerfen?")) { const p = f === 'cycles' ? `extraCycles/${id}` : `agieOffsets/${id}`; await db.ref(`maintenanceState/${p}`).remove(); } }
 
         function renderChart(data) {
             const ctx = document.getElementById('mainChart').getContext('2d');
             if(chart) chart.destroy();
-            
             chart = new Chart(ctx, {
-                type: 'bar',
-                plugins: [ChartDataLabels],
-                data: {
-                    labels: data.map(d => "A" + d.id),
-                    datasets: [{
-                        label: 'Reststückzahl',
-                        data: data.map(d => d.rest),
-                        backgroundColor: data.map(d => d.color),
-                        borderWidth: 1
-                    }]
-                },
+                type: 'bar', plugins: [ChartDataLabels],
+                data: { labels: data.map(d => "A" + d.id), datasets: [{ data: data.map(d => d.rest), backgroundColor: data.map(d => d.color) }] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { 
-                            beginAtZero: false,
-                            title: { display: true, text: 'Reststückzahl bis Wartung', font: { weight: 'bold' } }
-                        }
-                    },
-                    plugins: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { 
                         legend: { display: false },
-                        tooltip: {
-                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                            titleColor: '#d50000',
-                            bodyColor: '#333',
-                            borderColor: '#ccc',
-                            borderWidth: 1,
-                            padding: 10,
-                            displayColors: false,
-                            callbacks: {
-                                label: function(context) {
-                                    const d = data[context.dataIndex];
-                                    return [
-                                        `Maschine: A${d.id}`,
-                                        `Reststückzahl bis Wartung: ${d.rest.toLocaleString()}`,
-                                        `Gesamtstückzahl seit Reset: ${d.ist.toLocaleString()}`,
-                                        `Paket ${d.pkg} offen`
-                                    ];
-                                }
-                            }
-                        },
-                        datalabels: {
-                            anchor: 'end', align: 'top', offset: 5, rotation: -90,
-                            formatter: (value) => value.toLocaleString(),
-                            font: { weight: 'bold', size: 12 }, color: '#003a6c'
-                        }
+                        tooltip: { callbacks: { label: (c) => { const d = data[c.dataIndex]; return [`Rest: ${d.rest.toLocaleString()}`, `Ist: ${d.ist.toLocaleString()}`, `Paket: ${d.pkg}`]; } } },
+                        datalabels: { anchor: 'end', align: 'top', offset: 5, rotation: -90, formatter: (v) => v.toLocaleString(), font: { weight: 'bold' }, color: '#003a6c' }
                     },
-                    layout: { padding: { top: 60, bottom: 10 } }
+                    scales: { y: { beginAtZero: false } },
+                    layout: { padding: { top: 60 } }
                 }
             });
         }
 
         function resetLogoutTimer() {
-            stopLogoutTimer();
-            if (!auth.currentUser) return;
-            let timeLeft = timeoutSeconds;
-            const display = document.getElementById('timerDisplay');
-            display.style.display = "block";
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                display.innerText = "Auto-Logout: " + timeLeft + "s";
-                if (timeLeft <= 0) clearInterval(countdownInterval);
-            }, 1000);
+            stopLogoutTimer(); if (!auth.currentUser) return;
+            let tL = timeoutSeconds; const disp = document.getElementById('timerDisplay'); disp.style.display = "block";
+            countdownInterval = setInterval(() => { tL--; disp.innerText = "Auto-Logout: " + tL + "s"; if (tL <= 0) clearInterval(countdownInterval); }, 1000);
             logoutTimer = setTimeout(() => auth.signOut(), timeoutSeconds * 1000);
         }
-
-        function stopLogoutTimer() {
-            if (logoutTimer) clearTimeout(logoutTimer);
-            if (countdownInterval) clearInterval(countdownInterval);
-            if (document.getElementById('timerDisplay')) document.getElementById('timerDisplay').style.display = "none";
-        }
-
+        function stopLogoutTimer() { if (logoutTimer) clearTimeout(logoutTimer); if (countdownInterval) clearInterval(countdownInterval); if (document.getElementById('timerDisplay')) document.getElementById('timerDisplay').style.display = "none"; }
         function toggleHelp() { auth.currentUser ? openModal('helpLoggedIn') : openModal('helpLoggedOut'); }
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        
-        async function performLogin() { 
-            try { 
-                await auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value); 
-                closeModal('authModal'); 
-            } catch(e) { alert(e.message); } 
-        }
-
+        async function performLogin() { try { await auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value); closeModal('authModal'); } catch(e) { alert(e.message); } }
         async function performRegister() {
             if(prompt("Einladungscode:") !== String(cloudConfig.inviteCode)) return alert("Falsch!");
-            const e = document.getElementById('email').value, p = document.getElementById('pass').value, n = prompt("Name:");
-            try { 
-                const cred = await auth.createUserWithEmailAndPassword(e, p); 
-                await cred.user.updateProfile({ displayName: n }); 
-                closeModal('authModal'); 
-            } catch(e) { alert(e.message); }
+            try { const cred = await auth.createUserWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value); await cred.user.updateProfile({ displayName: prompt("Name:") }); closeModal('authModal'); } catch(e) { alert(e.message); }
         }
-
         function triggerImport() { document.getElementById('fileInput').click(); }
-        document.getElementById('fileInput').onchange = (e) => {
-            const r = new FileReader();
-            r.onload = (ev) => db.ref('maintenanceState/cloudRawData').set(JSON.parse(ev.target.result));
-            r.readAsText(e.target.files[0]);
-        };
-
+        document.getElementById('fileInput').onchange = (e) => { const r = new FileReader(); r.onload = (ev) => db.ref('maintenanceState/cloudRawData').set(JSON.parse(ev.target.result)); r.readAsText(e.target.files[0]); };
         ['mousemove', 'mousedown', 'keypress', 'touchstart'].forEach(evt => document.addEventListener(evt, resetLogoutTimer));
     </script>
 </body>
