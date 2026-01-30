@@ -57,10 +57,13 @@
     </div>
 
     <div class="top-bar"></div>
-    <div class="header">
-        <div class="bosch-brand">BOSCH<span> AGIE</span></div>
+<div class="header">
+    <div class="bosch-brand">BOSCH<span> AGIE</span></div>
+    <div style="display: flex; gap: 20px; align-items: center;">
+        <div id="timerDisplay" style="font-size: 12px; color: var(--bosch-red); font-weight: bold; display: none;"></div>
         <div id="statusLabel" style="font-size: 12px; font-weight: bold;">Verbinde...</div>
     </div>
+</div>
 
     <div style="padding: 10px 20px; background: #f8f9fa; border-bottom: 1px solid #ddd; display: flex; gap: 10px; align-items: center;">
         <button id="authBtn" class="nav-btn" onclick="openModal('authModal')">🔑 Login</button>
