@@ -27,6 +27,7 @@
             height: 100vh; overflow: hidden; 
         }
 
+        /* Top-Bar Design */
         .top-bar { 
             height: 45px; width: 100%; 
             background: linear-gradient(90deg, #d50000 0%, #d50000 25%, #003a6c 25%, #003a6c 50%, #00b5e2 50%, #00b5e2 75%, #008a4f 75%, #008a4f 100%); 
@@ -44,20 +45,24 @@
         .bosch-text { color: #d50000; font-size: 30px; font-weight: 900; letter-spacing: -1.5px; font-family: 'Arial Black', sans-serif; line-height: 1; }
         .version-tag { color: #525f6b; font-size: 14px; font-weight: bold; }
         
+        /* Layout */
         .main-layout { display: flex; flex: 1; padding: 20px; gap: 20px; overflow: hidden; }
         .content { flex: 3; background: white; padding: 20px; border-top: 4px solid var(--bosch-blue); position: relative; }
         .sidebar { flex: 1.5; background: white; border-top: 4px solid var(--bosch-light-blue); overflow-y: auto; padding: 10px; }
 
         .footer { background: white; padding: 10px 30px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; }
         
+        /* Maschinen-Zeilen */
         .control-row { 
             display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; 
             border-left: 8px solid #ccc; margin-bottom: 5px; gap: 8px; 
         }
 
+        /* Pulsieren für Überfällige */
         @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
         .pulse { animation: pulse-red 1.5s infinite ease-in-out; }
 
+        /* Buttons & Inputs */
         .nav-btn { 
             padding: 6px 12px; cursor: pointer; border: 1px solid #ccc; background: white; 
             font-weight: bold; color: var(--bosch-blue); font-size: 13px; border-radius: 2px; 
@@ -132,7 +137,8 @@
         <div id="helpLoggedIn" class="modal">
             <div class="modal-box" style="text-align: left;">
                 <h2 style="color:var(--bosch-blue)">Hilfe & Funktionen</h2>
-                <hr><p><b>📊 Diagramm:</b> Dunkelrot (Überfällig), Hellrot (<500), Orange (<2000), Grün (OK).</p>
+                <hr><p><b>📊 Balkendiagramm:</b><br>Dunkelrot: Überfällig<br>Hellrot: Rest < 500<br>Orange: Rest < 2000<br>Grün: Rest > 2000</p>
+                <p><b>⚙️ WP-Reset:</b> Setzt die Maschine auf das große Intervall zurück.</p>
                 <button class="nav-btn btn-primary" style="width:100%" onclick="closeModal('helpLoggedIn')">Schließen</button>
             </div>
         </div>
@@ -171,6 +177,7 @@
         let chart = null, logoutTimer, countdownInterval;
         const timeoutSeconds = 70;
 
+        // Firebase Sync
         db.ref('config').on('value', snap => { if(snap.exists()) cloudConfig = snap.val(); });
         db.ref('maintenanceState').on('value', snap => {
             const val = snap.val() || {};
@@ -181,6 +188,7 @@
             updateUI();
         });
 
+        // Auth Listener
         auth.onAuthStateChanged(user => {
             const btn = document.getElementById('authBtn'), importBtn = document.getElementById('importBtn'),
                   adminBtn = document.getElementById('adminBtn'), exportBtn = document.getElementById('exportBtn'),
@@ -196,7 +204,7 @@
 
         function toggleAuthMode(mode) {
             const inputs = document.querySelectorAll('#authModal input');
-            inputs.forEach(i => i.value = "");
+            inputs.forEach(i => i.value = ""); // Alle Felder leeren
             document.getElementById('loginContainer').style.display = (mode === 'login') ? 'block' : 'none';
             document.getElementById('regContainer').style.display = (mode === 'reg') ? 'block' : 'none';
         }
@@ -216,7 +224,7 @@
             if(!name || !email || !pass || !invite) return alert("Alle Felder füllen!");
             if(pass !== passC) return alert("Passwörter ungleich!");
             if(invite !== String(cloudConfig.inviteCode)) return alert("Code falsch!");
-            if(!email.endsWith("@de.bosch.com") && !email.endsWith("@bcn.bosch.com")) return alert("Nur Bosch-Emails!");
+            if(!email.endsWith("@de.bosch.com") && !email.endsWith("@bcn.bosch.com")) return alert("Nur @de.bosch.com oder @bcn.bosch.com erlaubt!");
             try { 
                 const cr = await auth.createUserWithEmailAndPassword(email, pass);
                 await cr.user.updateProfile({ displayName: name });
@@ -254,17 +262,30 @@
         }
 
         async function changeCycle(id, val) {
-            const cC = state.extraCycles[id] || 0, item = state.cloudRawData.find(x => x.StationNo == id);
+            const currentCycles = state.extraCycles[id] || 0;
+            const item = state.cloudRawData.find(x => x.StationNo == id);
             const ist = (parseInt(item.Parts) || 0) - (state.agieOffsets[id] || 0);
-            let nC = (val > 0) ? ( ((16000 + (cC * 16000)) - ist) > 0 ? (16000 + ist) / 16000 - 1 : cC + 1 ) : Math.max(0, cC - 1);
-            await db.ref(`maintenanceState/extraCycles/${id}`).set(nC);
+            let newCycles;
+            if (val > 0) {
+                const theoretischBenoetigt = (ist / 16000);
+                if (((16000 + (currentCycles * 16000)) - ist) <= 0) {
+                    newCycles = Math.floor(theoretischBenoetigt) + 1;
+                } else {
+                    newCycles = currentCycles + 1;
+                }
+            } else {
+                newCycles = Math.max(0, currentCycles - 1);
+            }
+            newCycles = Math.round(newCycles); // Ganzzahl erzwingen
+            await db.ref(`maintenanceState/extraCycles/${id}`).set(newCycles);
             await db.ref('maintenanceState/history').push({ Zeit: new Date().toLocaleString(), Agie: "A"+id, Aktion: val > 0 ? "Wartung" : "Korrektur", User: auth.currentUser.displayName, TS: Date.now() });
         }
 
         async function wpReset(id) {
-            if(prompt("Master-Passwort:") === String(cloudConfig.masterPassword)) {
+            if(prompt("Master-Passwort A" + id + ":") === String(cloudConfig.masterPassword)) {
                 const up = {}; up[`maintenanceState/agieOffsets/${id}`] = (state.agieOffsets[id] || 0) + 216000; up[`maintenanceState/extraCycles/${id}`] = 0;
-                await db.ref().update(up); alert("Reset!");
+                up[`maintenanceState/history/${db.ref().push().key}`] = { Zeit: new Date().toLocaleString(), Agie: "A"+id, Aktion: "WP-Reset", User: auth.currentUser.displayName, TS: Date.now() };
+                await db.ref().update(up); alert("Erfolgreich!");
             } else alert("Falsch!");
         }
 
@@ -286,7 +307,7 @@
                 </div></div>`).join('');
         }
 
-        async function clearP(id, f) { if(confirm("Löschen?")) { const p = f === 'cycles' ? `extraCycles/${id}` : `agieOffsets/${id}`; await db.ref(`maintenanceState/${p}`).remove(); } }
+        async function clearP(id, f) { if(confirm("Aktion verwerfen?")) { const p = f === 'cycles' ? `extraCycles/${id}` : `agieOffsets/${id}`; await db.ref(`maintenanceState/${p}`).remove(); } }
 
         function renderChart(data) {
             const ctx = document.getElementById('mainChart').getContext('2d');
@@ -298,7 +319,7 @@
                     responsive: true, maintainAspectRatio: false,
                     plugins: { 
                         legend: { display: false },
-                        tooltip: { callbacks: { label: (c) => { const d = data[c.dataIndex]; return [`Rest: ${d.rest.toLocaleString()}`, `Paket: ${d.pkg}`]; } } },
+                        tooltip: { callbacks: { label: (c) => { const d = data[c.dataIndex]; return [`Rest: ${d.rest.toLocaleString()}`, `Ist: ${d.ist.toLocaleString()}`, `Paket: ${d.pkg}`]; } } },
                         datalabels: { anchor: 'end', align: 'top', offset: 5, rotation: -90, formatter: (v) => v.toLocaleString(), font: { weight: 'bold' }, color: '#003a6c' }
                     },
                     scales: { y: { beginAtZero: false } },
