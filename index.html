@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Agie Wartung - Bosch V1.0</title>
+    <title>Agie Wartung - Bosch V1.1</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -111,7 +111,7 @@
     </div>
 
     <div class="header">
-        <div class="bosch-brand"><span class="bosch-text">BOSCH</span><span class="version-tag">V1.0</span></div>
+        <div class="bosch-brand"><span class="bosch-text">BOSCH</span><span class="version-tag">V1.1</span></div>
         <div style="display: flex; gap: 20px; align-items: center;">
             <div id="timerDisplay" style="font-size: 13px; color: var(--bosch-red); font-weight: bold; display: none;"></div>
             <div id="statusLabel" style="font-size: 14px; font-weight: bold; color: #008a4f;">Online</div>
@@ -131,7 +131,7 @@
         <div id="helpLoggedIn" class="modal">
             <div class="modal-box" style="text-align: left;">
                 <h2 style="color:var(--bosch-blue)">Hilfe & Funktionen</h2>
-                <hr><p><b>Zyklen-Limit:</b> Max. 13 Zyklen.<br><b>Deckelung:</b> Anzeige max. 16.000 Rest.<br><b>WP-Reset:</b> Erst ab Zyklus 13 aktiv.</p>
+                <hr><p><b>Zyklen-Limit:</b> Max. 12 Klicks.<br><b>Deckelung:</b> Anzeige max. 16.000 Rest.<br><b>WP-Reset:</b> Bei Zyklus 12 & Rest < 2000 aktiv.</p>
                 <button class="nav-btn btn-primary" style="width:100%" onclick="closeModal('helpLoggedIn')">Schließen</button>
             </div>
         </div>
@@ -149,7 +149,7 @@
         <div class="sidebar" id="machineList"></div>
     </div>
 
-    <div class="footer">Verantwortlicher Norman Schultheis | Agie Wartung V1.0</div>
+    <div class="footer">Verantwortlicher Norman Schultheis | Agie Wartung V1.1</div>
     <input type="file" id="fileInput" style="display:none" accept=".json">
 
     <script>
@@ -168,7 +168,7 @@
         let cloudConfig = { inviteCode: "", AdminPW: "", masterPassword: "" };
         let state = { cloudRawData: [], extraCycles: {}, agieOffsets: {}, history: [] };
         let chart = null, logoutTimer, countdownInterval;
-        let isProcessing = false; // Sperre für Zähler
+        let isProcessing = false; 
         const timeoutSeconds = 25;
 
         db.ref('config').on('value', snap => { if(snap.exists()) cloudConfig = snap.val(); });
@@ -217,19 +217,27 @@
         }
 
         function updateUI() {
-            const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7"];
+            const packages = ["P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/5", "P1/2", "P1/3", "P1/2", "P1/4", "P1/2/3", "P1/6/7", "P1/2"];
+
             const data = state.cloudRawData.map(item => {
-                const id = item.StationNo, ist = (parseInt(item.Parts) || 0) - (state.agieOffsets[id] || 0), cycles = state.extraCycles[id] || 0;
+                const id = item.StationNo;
+                const ist = (parseInt(item.Parts) || 0) - (state.agieOffsets[id] || 0);
+                const cycles = state.extraCycles[id] || 0;
                 let rest = (16000 + (cycles * 16000)) - ist;
                 if (rest > 16000) rest = 16000;
                 let color = "#008a4f"; 
-                if (rest <= 0) color = "#8b0000"; else if (rest < 500) color = "#ff4d4d"; else if (rest < 2000) color = "#ffa500";
-                return { id, rest, color, ist, cycles, pkg: packages[cycles % packages.length] };
+                if (rest <= 0) color = "#8b0000"; 
+                else if (rest < 500) color = "#ff4d4d"; 
+                else if (rest < 2000) color = "#ffa500";
+                return { id, rest, color, ist, cycles, pkg: packages[Math.min(cycles, packages.length - 1)] };
             }).sort((a,b) => a.rest - b.rest);
 
             const list = document.getElementById('machineList'), isLogged = !!auth.currentUser;
             list.innerHTML = data.map(d => {
-                const isOverdue = d.rest <= 0, wpEnabled = isLogged && d.cycles >= 13, plusEnabled = isLogged && d.rest < 2000 && d.cycles < 13;
+                const isOverdue = d.rest <= 0;
+                const wpEnabled = isLogged && d.cycles >= 12 && d.rest < 2000; 
+                const plusEnabled = isLogged && d.rest < 2000 && d.cycles < 12;
+
                 return `
                 <div class="control-row ${isOverdue ? 'pulse' : ''}" style="border-left-color:${d.color}">
                     <div style="flex:1.5"><b>A${d.id}</b><br><small>${d.pkg}</small></div>
@@ -240,6 +248,7 @@
                     <button class="nav-btn" ${plusEnabled ? '' : 'disabled'} onclick="changeCycle('${d.id}', 1)">+</button>
                 </div>`;
             }).join('');
+            
             renderChart(data);
             renderAdminList(data);
         }
@@ -252,41 +261,15 @@
                 const item = state.cloudRawData.find(x => x.StationNo == id);
                 const ist = (parseInt(item.Parts) || 0) - (state.agieOffsets[id] || 0);
                 const oldRest = Math.min(16000, (16000 + (oldCycles * 16000)) - ist);
-                
-                let nC = oldCycles;
-
-                if (val > 0) {
-                    // Striktes +1 bis maximal 13
-                    if (oldCycles < 13) {
-                        nC = oldCycles + 1;
-                    } else {
-                        isProcessing = false;
-                        return; 
-                    }
-                } else {
-                    // Striktes -1 bis minimal 0
-                    nC = Math.max(0, oldCycles - 1);
-                }
-
+                let nC = (val > 0) ? Math.min(12, oldCycles + 1) : Math.max(0, oldCycles - 1);
+                if(nC === oldCycles) return;
                 const newRest = Math.min(16000, (16000 + (nC * 16000)) - ist);
-                
-                // Speichern in Firebase
                 await db.ref(`maintenanceState/extraCycles/${id}`).set(nC);
-                
-                // Historie schreiben
                 await db.ref('maintenanceState/history').push({ 
-                    Zeit: new Date().toLocaleString(), 
-                    Agie: "A"+id, 
-                    User: auth.currentUser.displayName, 
-                    TS: Date.now(),
-                    Aktion: val > 0 ? "Wartung" : "Korrektur",
-                    Details: `Zyklen: ${oldCycles} -> ${nC} | Rest: ${oldRest.toLocaleString()} -> ${newRest.toLocaleString()}`
+                    Zeit: new Date().toLocaleString(), Agie: "A"+id, User: auth.currentUser.displayName, TS: Date.now(),
+                    Aktion: val > 0 ? "Wartung" : "Korrektur", Details: `Zyklen: ${oldCycles} -> ${nC} | Rest: ${oldRest.toLocaleString()} -> ${newRest.toLocaleString()}`
                 });
-            } catch (e) {
-                console.error("Fehler beim Speichern:", e);
-            } finally {
-                isProcessing = false;
-            }
+            } finally { isProcessing = false; }
         }
 
         async function wpReset(id) {
@@ -299,7 +282,7 @@
                     const ist = (parseInt(item.Parts) || 0) - (state.agieOffsets[id] || 0);
                     const oldRest = Math.min(16000, (16000 + (oldCycles * 16000)) - ist);
                     const up = {}; 
-                    up[`maintenanceState/agieOffsets/${id}`] = (state.agieOffsets[id] || 0) + 224000;
+                    up[`maintenanceState/agieOffsets/${id}`] = (state.agieOffsets[id] || 0) + 208000; // 13 * 16000
                     up[`maintenanceState/extraCycles/${id}`] = 0;
                     const historyKey = db.ref('maintenanceState/history').push().key;
                     up[`maintenanceState/history/${historyKey}`] = { 
@@ -316,9 +299,7 @@
         function exportCSVWithAuth() {
             if(prompt("Admin-Passwort:") === String(cloudConfig.AdminPW)) {
                 let csv = "\uFEFFDatum;Maschine;Mitarbeiter;Aktion;Details (Vorher -> Nachher)\n";
-                state.history.sort((a,b) => b.TS - a.TS).forEach(h => { 
-                    csv += `${h.Zeit};${h.Agie};${h.User};${h.Aktion};${h.Details || ""}\n`; 
-                });
+                state.history.sort((a,b) => b.TS - a.TS).forEach(h => { csv += `${h.Zeit};${h.Agie};${h.User};${h.Aktion};${h.Details || ""}\n`; });
                 const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
                 link.download = `Protokoll_Detail.csv`; link.click();
             }
@@ -326,7 +307,7 @@
 
         function renderAdminList(data) {
             document.getElementById('adminActionsList').innerHTML = data.map(d => `
-                <div class="admin-list-item"><span><b>A${d.id}</b></span><div>
+                <div class="admin-list-item" style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><b>A${d.id}</b></span><div>
                     <button class="nav-btn" style="padding:2px 5px; font-size:10px" onclick="clearP('${d.id}', 'cycles')">Zyklen 0</button>
                     <button class="nav-btn" style="padding:2px 5px; font-size:10px" onclick="clearP('${d.id}', 'wp')">WP weg</button>
                 </div></div>`).join('');
@@ -338,36 +319,23 @@
             const ctx = document.getElementById('mainChart').getContext('2d');
             if(chart) chart.destroy();
             chart = new Chart(ctx, {
-                type: 'bar',
-                plugins: [ChartDataLabels],
+                type: 'bar', plugins: [ChartDataLabels],
                 data: {
                     labels: data.map(d => "A" + d.id),
-                    datasets: [{
-                        label: 'Reststückzahl',
-                        data: data.map(d => d.rest),
-                        backgroundColor: data.map(d => d.color),
-                        borderWidth: 1
-                    }]
+                    datasets: [{ label: 'Reststückzahl', data: data.map(d => d.rest), backgroundColor: data.map(d => d.color), borderWidth: 1 }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: false, title: { display: true, text: 'Reststückzahl bis Wartung', font: { weight: 'bold' } } } },
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: false, title: { display: true, text: 'Reststückzahl' } } },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                            titleColor: '#d50000', bodyColor: '#333', borderColor: '#ccc', borderWidth: 1, padding: 10, displayColors: false,
-                            callbacks: {
-                                label: function(context) {
-                                    const d = data[context.dataIndex];
-                                    return [`Maschine: A${d.id}`, `Rest: ${d.rest.toLocaleString()}`, `Gesamt: ${d.ist.toLocaleString()}`, `Paket ${d.pkg}`];
-                                }
-                            }
+                            backgroundColor: 'white', titleColor: '#d50000', bodyColor: '#333', borderColor: '#ccc', borderWidth: 1,
+                            callbacks: { label: (ctx) => { const d = data[ctx.dataIndex]; return [`Rest: ${d.rest.toLocaleString()}`, `Paket: ${d.pkg}`]; } }
                         },
-                        datalabels: { anchor: 'end', align: 'top', offset: 5, rotation: -90, formatter: (value) => value.toLocaleString(), font: { weight: 'bold', size: 12 }, color: '#003a6c' }
+                        datalabels: { anchor: 'end', align: 'top', offset: 5, rotation: -90, formatter: (v) => v.toLocaleString(), font: { weight: 'bold' }, color: '#003a6c' }
                     },
-                    layout: { padding: { top: 60, bottom: 10 } }
+                    layout: { padding: { top: 60 } }
                 }
             });
         }
