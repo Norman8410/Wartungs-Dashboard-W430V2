@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Unotron Wartung - V1.6</title>
+    <title>Unotron Wartung - V1.7</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -12,7 +12,7 @@
         :root { --bosch-red: #d50000; --bosch-blue: #003a6c; --bosch-light-blue: #00b5e2; --bosch-green: #008a4f; --bosch-gray: #eff1f2; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bosch-gray); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* Hamburger Menü fixiert */
+        /* Drawer & Navigation */
         .nav-drawer { position: fixed; left: -280px; top: 0; width: 280px; height: 100%; background: white; box-shadow: 2px 0 15px rgba(0,0,0,0.3); transition: 0.3s ease; z-index: 5000; padding-top: 20px; }
         .nav-drawer.open { left: 0; }
         .nav-item { padding: 15px 25px; display: flex; align-items: center; color: #404040; text-decoration: none; font-weight: 600; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
@@ -20,7 +20,7 @@
         .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; backdrop-filter: blur(2px); }
 
         .top-bar { height: 45px; width: 100%; background: linear-gradient(90deg, #d50000 0%, #d50000 25%, #003a6c 25%, #003a6c 50%, #00b5e2 50%, #00b5e2 75%, #008a4f 75%, #008a4f 100%); display: flex; align-items: center; padding: 0 15px; box-sizing: border-box; color: white; position: relative; z-index: 4000; }
-        .menu-btn { cursor: pointer; font-size: 24px; margin-right: 15px; }
+        .menu-btn { cursor: pointer; font-size: 24px; margin-right: 15px; user-select: none; }
         
         .header { background: white; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .bosch-text { color: #d50000; font-size: 30px; font-weight: 900; letter-spacing: -1.5px; font-family: 'Arial Black', sans-serif; }
@@ -50,11 +50,11 @@
 
     <div class="top-bar">
         <span class="menu-btn" onclick="toggleMenu()">☰</span>
-        <div style="font-size: 18px; font-weight: 600;">Wartung Unotron</div>
+        <div style="font-size: 18px; font-weight: 600;">Unotron Wartung</div>
     </div>
 
     <div class="header">
-        <div class="bosch-text">BOSCH <span style="color:#525f6b; font-size:14px;">UNOTRON V1.6</span></div>
+        <div class="bosch-text">BOSCH <span style="color:#525f6b; font-size:14px;">UNOTRON</span></div>
         <button id="authBtn" class="nav-btn" onclick="openModal('authModal')">🔑 Login</button>
     </div>
 
@@ -154,34 +154,53 @@
                 plugins: [ChartDataLabels],
                 data: {
                     labels: data.map(d => "U" + d.id),
-                    datasets: [{ data: data.map(d => d.rest), backgroundColor: data.map(d => d.color) }]
+                    datasets: [{ 
+                        data: data.map(d => d.rest), 
+                        backgroundColor: data.map(d => d.color),
+                        borderRadius: 4
+                    }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false }, // Tooltip reagiert auf ganze Spalte
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
                             enabled: true,
-                            backgroundColor: 'white', titleColor: 'black', bodyColor: '#333',
-                            borderColor: '#ccc', borderWidth: 1, padding: 10,
+                            backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                            titleColor: '#000',
+                            titleFont: { size: 16, weight: 'bold' },
+                            bodyColor: '#333',
+                            bodyFont: { size: 13 },
+                            borderColor: '#ddd',
+                            borderWidth: 1,
+                            padding: 15,
+                            displayColors: true,
+                            boxPadding: 6,
                             callbacks: {
-                                title: (ctx) => "Station " + ctx[0].label,
-                                label: (ctx) => {
-                                    const d = data[ctx.dataIndex];
+                                title: (items) => "Station U" + data[items[0].dataIndex].id,
+                                label: (item) => {
+                                    const d = data[item.dataIndex];
+                                    const status = d.prozent >= 100 ? "ÜBERFÄLLIG" : d.prozent >= 95 ? "KRITISCH" : d.prozent >= 80 ? "WARNUNG" : "OK";
                                     return [
-                                        "Restwert: " + Math.round(d.rest).toLocaleString(),
-                                        "Istwert: " + d.ist.toLocaleString(),
+                                        "--------------------------------",
+                                        "Status: " + status,
+                                        "Reststückzahl: " + Math.round(d.rest).toLocaleString(),
+                                        "Aktueller Istwert: " + d.ist.toLocaleString(),
+                                        "--------------------------------",
                                         "Verbrauch: " + Math.round(d.prozent) + "%",
                                         "Nächstes Ziel: " + d.ziel.toLocaleString(),
-                                        "Paket: " + d.pkg
+                                        "Wartungspaket: " + d.pkg
                                     ];
                                 }
                             }
                         },
                         datalabels: { anchor: 'end', align: 'top', rotation: -90, font: { weight: 'bold' }, formatter: Math.round }
                     },
-                    scales: { y: { beginAtZero: true, grid: { display: false } } }
+                    scales: { 
+                        y: { beginAtZero: true, grid: { color: '#f0f0f0' }, title: { display: true, text: 'Reststücke' } },
+                        x: { grid: { display: false } }
+                    }
                 }
             });
         }
@@ -196,9 +215,12 @@
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         async function login() {
             try { await auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value); closeModal('authModal'); }
-            catch(e) { alert("Fehler"); }
+            catch(e) { alert("Login fehlgeschlagen"); }
         }
-        auth.onAuthStateChanged(user => { document.getElementById('authBtn').innerText = user ? "Logout" : "🔑 Login"; updateUI(); });
+        auth.onAuthStateChanged(user => { 
+            document.getElementById('authBtn').innerText = user ? "Logout" : "🔑 Login"; 
+            updateUI(); 
+        });
     </script>
 </body>
 </html>
