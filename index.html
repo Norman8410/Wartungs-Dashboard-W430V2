@@ -322,4 +322,102 @@
                 const newRest = Math.min(16000, (16000 + (nC * 16000)) - ist);
                 await db.ref(`maintenanceState/extraCycles/${id}`).set(nC);
                 await db.ref('maintenanceState/history').push({ 
-                    Zeit: new Date().toLocaleString(), Agie: "A"+id, User: au
+                    Zeit: new Date().toLocaleString(), Agie: "A"+id, User: auth.currentUser.displayName, TS: Date.now(),
+                    Aktion: val > 0 ? "Wartung" : "Korrektur", Details: `Zyklen: ${oldCycles} -> ${nC} | Rest: ${oldRest.toLocaleString()} -> ${newRest.toLocaleString()}`
+                });
+            } finally { isProcessing = false; }
+        }
+
+        async function wpReset(id) {
+            if (isProcessing) return;
+            if(prompt("Master-Passwort:") === String(cloudConfig.masterPassword)) {
+                isProcessing = true;
+                try {
+                    const item = state.cloudRawData.find(x => x.StationNo == id);
+                    const oldCycles = state.extraCycles[id] || 0;
+                    const ist = (parseInt(item.Parts) || 0) - (state.agieOffsets[id] || 0);
+                    const oldRest = Math.min(16000, (16000 + (oldCycles * 16000)) - ist);
+                    const up = {}; 
+                    up[`maintenanceState/agieOffsets/${id}`] = (state.agieOffsets[id] || 0) + 208000;
+                    up[`maintenanceState/extraCycles/${id}`] = 0;
+                    const historyKey = db.ref('maintenanceState/history').push().key;
+                    up[`maintenanceState/history/${historyKey}`] = { 
+                        Zeit: new Date().toLocaleString(), Agie: "A"+id, Aktion: "WP-Reset", User: auth.currentUser.displayName, TS: Date.now(),
+                        Details: `Zyklen: ${oldCycles} -> 0 | Rest: ${oldRest.toLocaleString()} -> 16.000 (Reset)`
+                    };
+                    await db.ref().update(up); alert("WP-Reset erfolgreich!");
+                } finally { isProcessing = false; }
+            } else alert("Falsch!");
+        }
+
+        function openAdmin() { if(prompt("Admin-Passwort:") === String(cloudConfig.AdminPW)) openModal('adminModal'); }
+        
+        function exportCSVWithAuth() {
+            if(prompt("Admin-Passwort:") === String(cloudConfig.AdminPW)) {
+                let csv = "\uFEFFDatum;Maschine;Mitarbeiter;Aktion;Details (Vorher -> Nachher)\n";
+                state.history.sort((a,b) => b.TS - a.TS).forEach(h => { csv += `${h.Zeit};${h.Agie};${h.User};${h.Aktion};${h.Details || ""}\n`; });
+                const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+                link.download = `Protokoll_Detail.csv`; link.click();
+            }
+        }
+
+        function renderAdminList(data) {
+            document.getElementById('adminActionsList').innerHTML = data.map(d => `
+                <div class="admin-list-item" style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><b>A${d.id}</b></span><div>
+                    <button class="nav-btn" style="padding:2px 5px; font-size:10px" onclick="clearP('${d.id}', 'cycles')">Zyklen 0</button>
+                    <button class="nav-btn" style="padding:2px 5px; font-size:10px" onclick="clearP('${d.id}', 'wp')">WP weg</button>
+                </div></div>`).join('');
+        }
+
+        async function clearP(id, f) { if(confirm("Löschen?")) { const p = f === 'cycles' ? `extraCycles/${id}` : `agieOffsets/${id}`; await db.ref(`maintenanceState/${p}`).remove(); } }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if(chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'bar', plugins: [ChartDataLabels],
+                data: {
+                    labels: data.map(d => "A" + d.id),
+                    datasets: [{ label: 'Reststückzahl', data: data.map(d => d.rest), backgroundColor: data.map(d => d.color), borderWidth: 1 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: false, title: { display: true, text: 'Reststückzahl bis Wartung', font: { weight: 'bold' } } } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#d50000', bodyColor: '#333', borderColor: '#ccc', borderWidth: 1, padding: 12, displayColors: false, cornerRadius: 4,
+                            titleFont: { size: 14, weight: 'bold' }, bodyFont: { size: 13 },
+                            callbacks: {
+                                title: (context) => "Maschine: " + context[0].label,
+                                label: function(context) {
+                                    const d = data[context.dataIndex];
+                                    return [
+                                        "----------------------------",
+                                        "Rest: " + d.rest.toLocaleString() + " Stk",
+                                        "Ist-Zähler: " + d.ist.toLocaleString(),
+                                        "Zyklus: " + d.cycles,
+                                        "Wartung: " + d.pkg
+                                    ];
+                                }
+                            }
+                        },
+                        datalabels: { anchor: 'end', align: 'top', offset: 5, rotation: -90, formatter: (v) => v.toLocaleString(), font: { weight: 'bold', size: 12 }, color: '#003a6c' }
+                    },
+                    layout: { padding: { top: 60, bottom: 10 } }
+                }
+            });
+        }
+
+        function resetLogoutTimer() { stopLogoutTimer(); if (!auth.currentUser) return; let tL = timeoutSeconds; const disp = document.getElementById('timerDisplay'); disp.style.display = "block"; countdownInterval = setInterval(() => { tL--; if(disp) disp.innerText = "Auto-Logout: " + tL + "s"; if (tL <= 0) clearInterval(countdownInterval); }, 1000); logoutTimer = setTimeout(() => auth.signOut(), timeoutSeconds * 1000); }
+        function stopLogoutTimer() { if (logoutTimer) clearTimeout(logoutTimer); if (countdownInterval) clearInterval(countdownInterval); if (document.getElementById('timerDisplay')) document.getElementById('timerDisplay').style.display = "none"; }
+        function toggleHelp() { auth.currentUser ? openModal('helpLoggedIn') : openModal('helpLoggedOut'); }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function triggerImport() { document.getElementById('fileInput').click(); }
+        document.getElementById('fileInput').onchange = (e) => { const r = new FileReader(); r.onload = (ev) => db.ref('maintenanceState/cloudRawData').set(JSON.parse(ev.target.result)); r.readAsText(e.target.files[0]); };
+        ['mousemove', 'mousedown', 'keypress', 'touchstart'].forEach(evt => document.addEventListener(evt, resetLogoutTimer));
+    </script>
+</body>
+</html>
